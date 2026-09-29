@@ -8,9 +8,9 @@ services:
     depends_on:
       - db
     volumes:
-      - .:/var/www/html    # Diubah dari ./src:/var/www/html menjadi .:/var/www/html
+      - ./src:/var/www/html
     restart: always
-
+    
   db:
     image: mariadb:10.5
     environment:
