@@ -1,9 +1,9 @@
 <?php
 // Koneksi Database
 $host = 'db';
-$user = 'root';
-$pass = 'root'; // Ubah jadi kosong jika container MariaDB menggunakan environment kosong / tanpa password
-$dbname = 'simpeg_db';
+$user = 'simpeg_user';       // Ubah dari 'root' menjadi 'simpeg_user'
+$pass = 'simpeg_password';   // Ubah menjadi 'simpeg_password'
+$dbname = 'simpeg_db';       // Nama database-nya 'simpeg_db'
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 if ($conn->connect_error) {
