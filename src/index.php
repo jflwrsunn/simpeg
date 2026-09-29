@@ -2,7 +2,7 @@
 // Koneksi Database
 $host = 'db';
 $user = 'root';
-$pass = 'root'; // Sesuaikan password DB docker-compose kamu
+$pass = ''; // Ubah jadi kosong jika container MariaDB menggunakan environment kosong / tanpa password
 $dbname = 'simpeg_db';
 
 $conn = new mysqli($host, $user, $pass, $dbname);
