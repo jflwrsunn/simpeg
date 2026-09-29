@@ -2,7 +2,7 @@
 // Koneksi Database
 $host = 'db';
 $user = 'root';
-$pass = ''; // Ubah jadi kosong jika container MariaDB menggunakan environment kosong / tanpa password
+$pass = 'root'; // Ubah jadi kosong jika container MariaDB menggunakan environment kosong / tanpa password
 $dbname = 'simpeg_db';
 
 $conn = new mysqli($host, $user, $pass, $dbname);
