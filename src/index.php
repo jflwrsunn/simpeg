@@ -1,8 +1,8 @@
 <?php
 // Koneksi Database
 $host = 'db';
-$user = 'simpeg_user';       // Ubah dari 'root' menjadi 'simpeg_user'
-$pass = 'simpeg_password';   // Ubah menjadi 'simpeg_password'
+$user = 'simpeg_user';
+$pass = 'simpeg_password';
 $dbname = 'simpeg_db';       // Nama database-nya 'simpeg_db'
 
 $conn = new mysqli($host, $user, $pass, $dbname);
