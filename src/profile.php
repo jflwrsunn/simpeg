@@ -1,115 +1,62 @@
 <?php
 session_start();
-require 'config.php';
-
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['username'])) {
     header("Location: login.php");
-    exit();
+    exit;
 }
+include 'config.php';
 
-$user_id = $_SESSION['user_id'];
-$message = '';
-$error = '';
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    
-    // VULNERABILITY 1: Stored XSS
-    // Input dimasukkan tanpa sanitasi
-    $catatan = $_POST['catatan_profil'];
-    $update_query = "UPDATE pegawai SET catatan_profil = '$catatan' WHERE id = $user_id";
-    $conn->query($update_query);
-    $message = "Profil berhasil diperbarui!";
-
-    // VULNERABILITY 2: Unrestricted File Upload (RCE)
-    // Tidak ada pemeriksaan ekstensi file (.php diizinkan terunggah)
-    if (isset($_FILES['foto']) && $_FILES['foto']['error'] == 0) {
-        $fileName = $_FILES['foto']['name'];
-        $fileTmpName = $_FILES['foto']['tmp_name'];
-        $uploadDir = 'uploads/';
-        $targetFilePath = $uploadDir . basename($fileName);
-
-        if (move_uploaded_file($fileTmpName, $targetFilePath)) {
-            $message .= "<br>Foto profil berhasil diunggah ke: <a href='$targetFilePath' target='_blank'>$targetFilePath</a>";
-        } else {
-            $error = "Gagal mengunggah foto profil.";
-        }
-    }
-}
-
-$query = "SELECT * FROM pegawai WHERE id = $user_id";
+// Rentan IDOR: mengambil data berdasarkan parameter GET id tanpa validasi kepemilikan session
+$profile_id = isset($_GET['id']) ? $_GET['id'] : $_SESSION['user_id'];
+$query = "SELECT * FROM users WHERE id = $profile_id";
 $result = $conn->query($query);
-$user = $result->fetch_assoc();
+$profile = $result ? $result->fetch_assoc() : null;
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Update Profil | SIMPEG</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-    <style>
-        .sidebar { min-height: 100vh; background-color: #343a40; color: white; padding-top: 20px;}
-        .sidebar a { color: #c2c7d0; text-decoration: none; padding: 10px 20px; display: block; }
-        .sidebar a:hover { background-color: #494e53; color: white; }
-        .content { padding: 20px; }
-    </style>
+    <title>Profil Pengguna - SIMPEG BSSN</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-2 sidebar">
-            <h4 class="text-center mb-4">SIMPEG</h4>
-            <a href="index.php">Dashboard</a>
-            <a href="profile.php">Update Profil</a>
-            <a href="logout.php">Logout</a>
-        </div>
-
-        <div class="col-md-10 content">
-            <h2 class="mb-4">Pengaturan Profil Pegawai</h2>
-
-            <?php if($message) echo "<div class='alert alert-success'>$message</div>"; ?>
-            <?php if($error) echo "<div class='alert alert-danger'>$error</div>"; ?>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-primary text-white">Detail Informasi</div>
-                        <div class="card-body">
-                            <p><b>NIP:</b> <?php echo $user['nip']; ?></p>
-                            <p><b>Nama:</b> <?php echo $user['nama']; ?></p>
-                            <p><b>Jabatan:</b> <?php echo $user['jabatan']; ?></p>
-                            <p><b>Golongan:</b> <?php echo $user['golongan']; ?></p>
-                            <hr>
-                            <h5>Catatan Bio Saat Ini:</h5>
-                            <div class="p-3 bg-light border rounded">
-                                <!-- Stored XSS Tereksekusi Di Sini -->
-                                <?php echo $user['catatan_profil']; ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-secondary text-white">Form Edit Profil & Unggah Pas Foto</div>
-                        <div class="card-body">
-                            <form action="profile.php" method="post" enctype="multipart/form-data">
-                                <div class="form-group">
-                                    <label>Ubah Catatan Bio / Profil:</label>
-                                    <textarea name="catatan_profil" class="form-control" rows="3"><?php echo $user['catatan_profil']; ?></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label>Unggah Pas Foto Formal (.jpg / .png):</label>
-                                    <input type="file" name="foto" class="form-control-file" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark px-4">
+        <a class="navbar-brand fw-bold" href="index.php"><i class="fas fa-arrow-left me-2"></i>Kembali ke Dashboard</a>
+    </nav>
+    <div class="container my-5" style="max-width: 600px;">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white fw-bold py-3">
+                <i class="fas fa-user-circle me-2"></i> Profil Pengguna (IDOR Training Target)
             </div>
-
+            <div class="card-body">
+                <?php if($profile): ?>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th class="w-25 bg-light">ID User</th>
+                            <td><?= $profile['id']; ?></td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Username</th>
+                            <td><?= htmlspecialchars($profile['username']); ?></td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Password (Plain/Hash)</th>
+                            <td><code><?= htmlspecialchars($profile['password']); ?></code></td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Role Akses</th>
+                            <td><span class="badge bg-success"><?= htmlspecialchars($profile['role']); ?></span></td>
+                        </tr>
+                    </table>
+                    <div class="alert alert-warning small mt-3">
+                        <i class="fas fa-info-circle me-1"></i> Ubah parameter <code>?id=...</code> di URL untuk menguji kerentanan IDOR (BOLA) antar akun pengguna!
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-danger">Data pengguna tidak ditemukan.</div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
-</div>
 </body>
 </html>

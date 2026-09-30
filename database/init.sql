@@ -16,5 +16,8 @@ CREATE TABLE IF NOT EXISTS pegawai (
     foto VARCHAR(255)
 );
 
--- Insert default admin account
-INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'administrator');
+-- Data Dummy User untuk latihan Pentest (SQLi & IDOR)
+INSERT INTO users (id, username, password, role) VALUES 
+(1, 'admin', 'admin123', 'Administrator Pusat'),
+(2, 'mora', 'sandi123', 'Analis Sandi Madya'),
+(3, 'operator', 'op2026', 'Staff Operator');
