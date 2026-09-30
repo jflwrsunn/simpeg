@@ -12,20 +12,23 @@ if (isset($_POST['submit'])) {
     $nip = $_POST['nip'];
     $jabatan = $_POST['jabatan'];
     
-    $target_dir = __DIR__ . "/uploads/";
+    // Tentukan direktori uploads di dalam /var/www/html/uploads/
+    $target_dir = "uploads/";
     if (!is_dir($target_dir)) {
         mkdir($target_dir, 0777, true);
+        chmod($target_dir, 0777);
     }
     
-    $file_name = $_FILES['foto']['name'];
-    $target_file = $target_dir . basename($file_name);
+    // Bersihkan nama file dari spasi atau karakter khusus agar aman saat dipindah
+    $original_name = basename($_FILES['foto']['name']);
+    $file_name = time() . "_" . preg_replace("/\s+/", "_", $original_name);
+    $target_file = $target_dir . $file_name;
     
-    // Unrestricted file upload bebas format (bisa upload .php, .exe, dll)
     if (move_uploaded_file($_FILES['foto']['tmp_name'], $target_file)) {
         $conn->query("INSERT INTO pegawai (nama, nip, jabatan, foto) VALUES ('$nama', '$nip', '$jabatan', '$file_name')");
-        $message = "Berhasil mengunggah file apa saja ke server!";
+        $message = "Berhasil mengunggah file!";
     } else {
-        $message = "Gagal mengunggah file. Pastikan folder uploads memiliki izin tulis.";
+        $message = "Gagal mengunggah file. Periksa permission folder.";
     }
 }
 
