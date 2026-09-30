@@ -16,6 +16,13 @@ CREATE TABLE IF NOT EXISTS pegawai (
     foto VARCHAR(255)
 );
 
+CREATE TABLE IF NOT EXISTS activity_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100),
+    activity TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Data Dummy User untuk latihan Pentest (SQLi & IDOR)
 INSERT INTO users (id, username, password, role) VALUES 
 (1, 'admin', 'admin123', 'Administrator Pusat'),
