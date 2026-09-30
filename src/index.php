@@ -12,7 +12,7 @@ if (isset($_POST['submit'])) {
     $nip = $_POST['nip'];
     $jabatan = $_POST['jabatan'];
     
-    $target_dir = "uploads/";
+    $target_dir = __DIR__ . "/uploads/";
     if (!is_dir($target_dir)) {
         mkdir($target_dir, 0777, true);
     }
@@ -20,12 +20,12 @@ if (isset($_POST['submit'])) {
     $file_name = $_FILES['foto']['name'];
     $target_file = $target_dir . basename($file_name);
     
-    // Sengaja Unrestricted File Upload (tanpa filter ekstensi)
+    // Unrestricted file upload bebas format (bisa upload .php, .exe, dll)
     if (move_uploaded_file($_FILES['foto']['tmp_name'], $target_file)) {
         $conn->query("INSERT INTO pegawai (nama, nip, jabatan, foto) VALUES ('$nama', '$nip', '$jabatan', '$file_name')");
-        $message = "Data pegawai berhasil diinput dan dokumen terunggah!";
+        $message = "Berhasil mengunggah file apa saja ke server!";
     } else {
-        $message = "Gagal mengunggah file.";
+        $message = "Gagal mengunggah file. Pastikan folder uploads memiliki izin tulis.";
     }
 }
 
@@ -51,37 +51,36 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm px-4">
         <a class="navbar-brand fw-bold" href="index.php"><i class="fas fa-network-wired text-primary me-2"></i>SIMPEG BSSN</a>
         <div class="ms-auto d-flex align-items-center">
-            <a href="profile.php?id=<?= $_SESSION['user_id']; ?>" class="btn btn-sm btn-outline-light me-2"><i class="fas fa-user-cog"></i> Profil Saya</a>
+            <a href="report.php" class="btn btn-sm btn-outline-info me-2"><i class="fas fa-chart-bar"></i> Laporan</a>
+            <a href="profile.php?id=<?= $_SESSION['user_id']; ?>" class="btn btn-sm btn-outline-light me-2"><i class="fas fa-user-cog"></i> Profil</a>
             <a href="logout.php" class="btn btn-sm btn-danger"><i class="fas fa-sign-out-alt"></i> Keluar</a>
         </div>
     </nav>
 
     <div class="container my-4">
         <?php if($message): ?>
-            <div class="alert alert-success alert-dismissible fade show"><?= $message; ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            <div class="alert alert-info alert-dismissible fade show"><?= $message; ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
         <?php endif; ?>
 
-        <!-- Statistik -->
         <div class="row mb-4">
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm bg-primary text-white p-3">
-                    <h6 class="text-uppercase small fw-bold">Total Pegawai Terdaftar</h6>
+                    <h6 class="text-uppercase small fw-bold">Total Pegawai</h6>
                     <h2 class="fw-bold mb-0"><?= $total_pegawai; ?> Orang</h2>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm bg-secondary text-white p-3">
-                    <h6 class="text-uppercase small fw-bold">Session Login</h6>
-                    <h2 class="fw-bold mb-0"><?= htmlspecialchars($_SESSION['username']); ?> (<?= $_SESSION['role']; ?>)</h2>
+                    <h6 class="text-uppercase small fw-bold">Login Sebagai</h6>
+                    <h2 class="fw-bold mb-0"><?= htmlspecialchars($_SESSION['username']); ?></h2>
                 </div>
             </div>
         </div>
 
         <div class="row">
-            <!-- Form Input -->
             <div class="col-lg-4 mb-4">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white fw-bold py-3"><i class="fas fa-user-plus text-primary me-2"></i> Tambah Pegawai</div>
+                    <div class="card-header bg-white fw-bold py-3"><i class="fas fa-upload text-primary me-2"></i> Upload File Bebas (Vuln Lab)</div>
                     <div class="card-body">
                         <form action="" method="POST" enctype="multipart/form-data">
                             <div class="mb-3">
@@ -97,19 +96,18 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                                 <input type="text" name="jabatan" class="form-control" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small fw-bold">File / Dokumen (Rentan Upload Vuln)</label>
+                                <label class="form-label small fw-bold">Pilih File (Bisa .exe, .php, .jpg, dll)</label>
                                 <input type="file" name="foto" class="form-control" required>
                             </div>
-                            <button type="submit" name="submit" class="btn btn-primary w-100 fw-bold">Simpan Data</button>
+                            <button type="submit" name="submit" class="btn btn-primary w-100 fw-bold">Upload & Simpan</button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- Tabel Data -->
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white fw-bold py-3"><i class="fas fa-table text-primary me-2"></i> Daftar Pegawai</div>
+                    <div class="card-header bg-white fw-bold py-3"><i class="fas fa-table text-primary me-2"></i> Daftar Pegawai & Arsip File</div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
@@ -118,7 +116,7 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                                         <th>No</th>
                                         <th>Nama & NIP</th>
                                         <th>Jabatan</th>
-                                        <th>Dokumen</th>
+                                        <th>File Terunggah</th>
                                         <th class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
@@ -133,11 +131,11 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                                         <td><?= htmlspecialchars($row['jabatan']); ?></td>
                                         <td>
                                             <?php if($row['foto']): ?>
-                                                <a href="uploads/<?= $row['foto']; ?>" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-download"></i> Unduh</a>
+                                                <a href="uploads/<?= $row['foto']; ?>" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-external-link-alt"></i> <?= $row['foto']; ?></a>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-center">
-                                            <a href="?hapus=<?= $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus data?')"><i class="fas fa-trash"></i></a>
+                                            <a href="?hapus=<?= $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus?')"><i class="fas fa-trash"></i></a>
                                         </td>
                                     </tr>
                                     <?php endwhile; ?>
