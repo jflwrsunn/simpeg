@@ -15,7 +15,8 @@ $role_result = $role_check_stmt->get_result()->fetch_assoc();
 $role_check_stmt->close();
 
 $real_role = $role_result['role'] ?? 'user';
-$is_admin = (strcasecmp(trim($real_role), 'admin') === 0);
+// Mengecek apakah string role mengandung kata "admin" (tidak peduli huruf besar/kecil)
+$is_admin = (stripos(strtolower($real_role), 'admin') !== false);
 
 // Sinkronkan session agar konsisten dengan database
 $_SESSION['role'] = $real_role;
