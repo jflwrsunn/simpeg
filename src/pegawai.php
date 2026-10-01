@@ -6,6 +6,14 @@ if (!isset($_SESSION['user_id'])) {
 }
 include 'config.php';
 
+// Validasi ketat: Hanya izinkan admin yang bisa mengakses halaman ini
+$is_admin = isset($_SESSION['role']) && strpos(strtolower($_SESSION['role']), 'admin') !== false;
+if (!$is_admin) {
+    // Jika bukan admin, redirect kembali ke index dengan pesan atau blokir
+    header("Location: index.php?error=unauthorized");
+    exit;
+}
+
 $result = $conn->query("SELECT * FROM pegawai ORDER BY id ASC");
 ?>
 <!DOCTYPE html>

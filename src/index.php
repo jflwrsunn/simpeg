@@ -1,4 +1,7 @@
 <?php
+<?php if ($is_admin): ?>
+    <a href="pegawai.php" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-users me-1 text-success"></i> Data Pegawai</a>
+<?php endif; ?>
 session_start();
 if (!isset($_SESSION['username'])) {
     header("Location: login.php");
