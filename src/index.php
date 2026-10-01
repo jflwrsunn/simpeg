@@ -6,6 +6,9 @@ if (!isset($_SESSION['username'])) {
 }
 include 'config.php';
 
+// Cek apakah user saat ini memiliki role Administrator
+$is_admin = isset($_SESSION['role']) && strpos(strtolower($_SESSION['role']), 'admin') !== false;
+
 $message = "";
 if (isset($_POST['submit'])) {
     $nama = $_POST['nama'];
@@ -30,13 +33,14 @@ if (isset($_POST['submit'])) {
         $curr_user = $_SESSION['username'];
         $conn->query("INSERT INTO activity_logs (username, activity) VALUES ('$curr_user', 'Mengunggah file lampiran: $file_name')");
         
-        $message = "Dokumen arsip berhasil diunggah ke server pusat.";
+        $message = "Dokumen arsip kepegawaian berhasil disinkronisasi ke server pusat.";
     } else {
-        $message = "Gagal mengunggah file. Periksa izin direktori uploads.";
+        $message = "[ERROR-ERR_FILE_IO] Gagal memproses penyimpanan berkas ke direktori server. Periksa kembali ukuran atau ekstensi file.";
     }
 }
 
-if (isset($_GET['hapus']) && isset($_SESSION['role']) && strpos(strtolower($_SESSION['role']), 'admin') !== false) {
+// Proteksi backend untuk aksi hapus (Hanya admin yang boleh mengeksekusi)
+if (isset($_GET['hapus']) && $is_admin) {
     $id = $_GET['hapus'];
     $conn->query("DELETE FROM pegawai WHERE id = $id");
     
@@ -47,16 +51,22 @@ if (isset($_GET['hapus']) && isset($_SESSION['role']) && strpos(strtolower($_SES
     exit;
 }
 
-$result = $conn->query("SELECT * FROM pegawai ORDER BY id DESC");
+// Ambil data hanya jika admin (menghemat resource dan memperketat akses backend)
+$result = null;
+$logs_result = null;
+if ($is_admin) {
+    $result = $conn->query("SELECT * FROM pegawai ORDER BY id DESC");
+    $logs_result = $conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 5");
+}
+
 $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_assoc()['total'];
-$logs_result = $conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 5");
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIMPEG — Contoh</title>
+    <title>SIMPEG — Badan Siber dan Sandi Negara</title>
     <!-- Favicon BSSN -->
     <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/9/9f/Logo_Badan_Siber_dan_Sandi_Negara.png" type="image/png">
     <!-- Google Fonts Inter -->
@@ -79,7 +89,6 @@ $logs_result = $conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 
             border: none;
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            transition: all 0.2s ease-in-out;
         }
         .card-header {
             background-color: transparent;
@@ -139,7 +148,7 @@ $logs_result = $conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 
                 <div class="bg-dark text-white rounded-3 p-2 me-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                     <i class="fas fa-shield-alt fa-sm"></i>
                 </div>
-                <span>SIMPEG <span class="text-muted fw-normal fs-6">Contoh</span></span>
+                <span>SIMPEG <span class="text-muted fw-normal fs-6">BSSN</span></span>
             </a>
             <div class="ms-auto d-flex align-items-center gap-2">
                 <a href="report.php" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-chart-bar me-1 text-primary"></i> Laporan</a>
@@ -159,14 +168,14 @@ $logs_result = $conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 
                 </div>
                 <div>
                     <h6 class="fw-bold mb-1">Pengumuman Kedinasan Sistem</h6>
-                    <p class="mb-0 small text-slate-300 text-light opacity-75">Pemeliharaan rutin infrastruktur pusat data dijadwalkan pada hari Jumat pukul 21.00 WIB.</p>
+                    <p class="mb-0 small text-light opacity-75">Pemeliharaan rutin infrastruktur pusat data dijadwalkan pada hari Jumat pukul 21.00 WIB.</p>
                 </div>
             </div>
         </div>
 
         <?php if($message): ?>
-            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
-                <i class="fas fa-check-circle me-2"></i><?= $message; ?>
+            <div class="alert alert-info alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
+                <i class="fas fa-info-circle me-2"></i><?= $message; ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
@@ -227,7 +236,7 @@ $logs_result = $conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold text-secondary">Lampiran Berkas</label>
                                 <input type="file" name="foto" class="form-control" required>
-                                <div class="form-text text-muted" style="font-size: 11px;">Format dokumen bebas (.pdf, .jpg, .zip, dll).</div>
+                                <div class="form-text text-muted" style="font-size: 11px;">Mendukung berkas format PDF, gambar, atau dokumen arsip.</div>
                             </div>
                             <button type="submit" name="submit" class="btn btn-primary w-100 shadow-sm">
                                 <i class="fas fa-save me-1"></i> Simpan Data
@@ -236,10 +245,11 @@ $logs_result = $conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 
                     </div>
                 </div>
 
-                <!-- Widget Audit Log Estetik -->
+                <!-- Widget Aktivitas Terakhir (Hanya muncul jika Administrator) -->
+                <?php if ($is_admin): ?>
                 <div class="card bg-white mt-4">
                     <div class="card-header bg-transparent py-3">
-                        <span class="fw-bold text-dark"><i class="fas fa-history text-secondary me-2"></i> Aktivitas Terakhir</span>
+                        <span class="fw-bold text-dark"><i class="fas fa-history text-secondary me-2"></i> Log Aktivitas Sistem</span>
                     </div>
                     <div class="card-body p-3">
                         <div class="list-group list-group-flush small">
@@ -253,6 +263,7 @@ $logs_result = $conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
             </div>
 
             <!-- Tabel Data Khusus Admin -->
@@ -263,7 +274,7 @@ $logs_result = $conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 
                         <span class="badge badge-soft-danger px-2 py-1 fw-medium">Khusus Admin</span>
                     </div>
                     <div class="card-body p-0">
-                        <?php if (isset($_SESSION['role']) && strpos(strtolower($_SESSION['role']), 'admin') !== false): ?>
+                        <?php if ($is_admin): ?>
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0 table-custom">
                                     <thead>
@@ -319,7 +330,7 @@ $logs_result = $conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 
     <!-- Footer Modern -->
     <footer class="bg-white text-center py-3 mt-auto border-top">
         <div class="container small text-muted">
-            <p class="mb-1">© 2026 Website Pengembangan — <strong>Simulasi</strong></p>
+            <p class="mb-1">© 2026 Direktorat Pengembangan Sistem Elektronik — <strong>Badan Siber dan Sandi Negara (BSSN)</strong></p>
             <p class="mb-0" style="font-size: 11px;">SIMPEG Internal Enterprise v3.4.2</p>
         </div>
     </footer>
