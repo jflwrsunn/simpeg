@@ -6,7 +6,19 @@ if (!isset($_SESSION['username'])) {
 }
 include 'config.php';
 
-$is_admin = isset($_SESSION['role']) && strpos(strtolower($_SESSION['role']), 'admin') !== false;
+// Validasi role ketat: Cek langsung ke database untuk memastikan role benar-benar admin
+$current_username = $_SESSION['username'];
+$role_check_stmt = $conn->prepare("SELECT role FROM users WHERE username = ?");
+$role_check_stmt->bind_param("s", $current_username);
+$role_check_stmt->execute();
+$role_result = $role_check_stmt->get_result()->fetch_assoc();
+$role_check_stmt->close();
+
+$real_role = $role_result['role'] ?? 'user';
+$is_admin = (strcasecmp(trim($real_role), 'admin') === 0);
+
+// Sinkronkan session agar konsisten dengan database
+$_SESSION['role'] = $real_role;
 
 $message = "";
 $error_msg = "";
@@ -16,7 +28,7 @@ if (isset($_POST['submit'])) {
     $nip = trim($_POST['nip']);
     $jabatan = trim($_POST['jabatan']);
     
-    // Validasi ketat di Backend
+    // Validasi input ketat
     if (!preg_match("/^[a-zA-Z\s\.\']+$/", $nama)) {
         $error_msg = "Format Nama tidak valid. Nama hanya boleh berisi huruf, spasi, dan titik.";
     } 
@@ -25,45 +37,53 @@ if (isset($_POST['submit'])) {
     } 
     else {
         $target_dir = __DIR__ . "/uploads/";
-        if (is_file(__DIR__ . "/uploads")) {
-            unlink(__DIR__ . "/uploads");
-        }
         if (!is_dir($target_dir)) {
             mkdir($target_dir, 0777, true);
         }
         
+        // Keamanan Upload: Validasi ekstensi file untuk mencegah webshell upload (.php, .phtml, dll)
         $original_name = basename($_FILES['foto']['name']);
-        $file_name = time() . "_" . preg_replace("/\s+/", "_", $original_name);
-        $target_file = $target_dir . $file_name;
+        $file_extension = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
+        $allowed_extensions = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'txt'];
         
-        if (move_uploaded_file($_FILES['foto']['tmp_name'], $target_file)) {
-            $stmt = $conn->prepare("INSERT INTO pegawai (nama, nip, jabatan, foto) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", $nama, $nip, $jabatan, $file_name);
-            $stmt->execute();
-            $stmt->close();
-            
-            $curr_user = $_SESSION['username'];
-            $log_stmt = $conn->prepare("INSERT INTO activity_logs (username, activity) VALUES (?, ?)");
-            $log_act = "Mengunggah file lampiran: $file_name";
-            $log_stmt->bind_param("ss", $curr_user, $log_act);
-            $log_stmt->execute();
-            $log_stmt->close();
-            
-            $message = "Dokumen arsip kepegawaian berhasil disinkronisasi ke server pusat.";
+        if (!in_array($file_extension, $allowed_extensions)) {
+            $error_msg = "[SECURITY WARNING] Ekstensi berkas tidak diizinkan! Hanya diperbolehkan dokumen atau gambar.";
         } else {
-            $error_msg = "[ERROR-ERR_FILE_IO] Gagal memproses penyimpanan berkas ke direktori server.";
+            $file_name = time() . "_" . preg_replace("/\s+/", "_", preg_replace("/[^a-zA-Z0-9\.\-_]/", "", $original_name));
+            $target_file = $target_dir . $file_name;
+            
+            if (move_uploaded_file($_FILES['foto']['tmp_name'], $target_file)) {
+                $stmt = $conn->prepare("INSERT INTO pegawai (nama, nip, jabatan, foto) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param("ssss", $nama, $nip, $jabatan, $file_name);
+                $stmt->execute();
+                $stmt->close();
+                
+                $log_stmt = $conn->prepare("INSERT INTO activity_logs (username, activity) VALUES (?, ?)");
+                $log_act = "Mengunggah berkas terverifikasi: $file_name";
+                $log_stmt->bind_param("ss", $current_username, $log_act);
+                $log_stmt->execute();
+                $log_stmt->close();
+                
+                $message = "Dokumen arsip kepegawaian berhasil divalidasi dan disimpan ke server.";
+            } else {
+                $error_msg = "[ERROR-ERR_FILE_IO] Gagal memproses penyimpanan berkas ke direktori server.";
+            }
         }
     }
 }
 
-// Proteksi backend untuk aksi hapus
-if (isset($_GET['hapus']) && $is_admin) {
+// Proteksi backend untuk aksi hapus (Double Check Admin Role)
+if (isset($_GET['hapus'])) {
+    if (!$is_admin) {
+        // Logging percobaan unauthorized deletion
+        $conn->query("INSERT INTO activity_logs (username, activity) VALUES ('$current_username', 'PERINGATAN: Mencoba akses ilegal menghapus data pegawai!')");
+        header("Location: index.php?error=unauthorized");
+        exit;
+    }
     $id = intval($_GET['hapus']);
     $conn->query("DELETE FROM pegawai WHERE id = $id");
     
-    $curr_user = $_SESSION['username'];
-    $conn->query("INSERT INTO activity_logs (username, activity) VALUES ('$curr_user', 'Menghapus data pegawai ID: $id')");
-    
+    $conn->query("INSERT INTO activity_logs (username, activity) VALUES ('$current_username', 'Menghapus data pegawai ID: $id')");
     header("Location: index.php");
     exit;
 }
@@ -90,12 +110,11 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #334155; }
         .navbar-custom { background: #ffffff; border-bottom: 1px solid #e2e8f0; }
-        .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         .card-header { background-color: transparent; border-bottom: 1px solid #f1f5f9; font-weight: 600; padding: 1.25rem 1.5rem; }
         .btn-primary { background-color: #0f172a; border-color: #0f172a; border-radius: 8px; padding: 0.6rem 1rem; font-weight: 500; }
         .btn-primary:hover { background-color: #1e293b; border-color: #1e293b; }
         .form-control, .form-select { border-radius: 8px; padding: 0.65rem 0.85rem; border-color: #cbd5e1; }
-        .form-control:focus { box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1); border-color: #0f172a; }
         .table-custom th { background-color: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border-bottom: 2px solid #e2e8f0; }
         .badge-soft-danger { background-color: #fee2e2; color: #991b1b; }
         .badge-soft-primary { background-color: #e0f2fe; color: #0369a1; }
@@ -103,7 +122,6 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <!-- Navbar Modern -->
     <nav class="navbar navbar-expand-lg navbar-custom px-4 py-3 sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold text-dark d-flex align-items-center" href="index.php">
@@ -122,6 +140,13 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
     </nav>
 
     <div class="container my-4 flex-grow-1">
+        <?php if(isset($_GET['error']) && $_GET['error'] == 'unauthorized'): ?>
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
+                <i class="fas fa-shield-alt me-2"></i><strong>Akses Ditolak!</strong> Aktivitas ilegal Anda telah tercatat di log keamanan sistem.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
         <div class="alert alert-announcement shadow-sm p-4 mb-4 border-0 d-flex align-items-center justify-content-between" role="alert">
             <div class="d-flex align-items-center">
                 <div class="bg-white bg-opacity-15 p-3 rounded-3 me-3 text-info">
@@ -129,7 +154,7 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                 </div>
                 <div>
                     <h6 class="fw-bold mb-1">Pengumuman Internal Korporat</h6>
-                    <p class="mb-0 small text-light opacity-75">Pemeliharaan rutin infrastruktur server pusat dijadwalkan pada hari Jumat pukul 21.00 WIB.</p>
+                    <p class="mb-0 small text-light opacity-75">Sistem menggunakan enkripsi berbasis database. Perubahan hak akses tanpa otorisasi akan masuk ke Audit Trail.</p>
                 </div>
             </div>
         </div>
@@ -169,9 +194,9 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                             <i class="fas fa-user-shield fa-lg"></i>
                         </div>
                         <div>
-                            <span class="text-muted small d-block fw-medium">Sesi Pengguna Aktif</span>
-                            <h3 class="fw-bold mb-0 text-dark"><?= htmlspecialchars($_SESSION['username']); ?> 
-                                <span class="badge badge-soft-primary fs-6 align-middle fw-semibold"><?= htmlspecialchars($_SESSION['role'] ?? 'Operator'); ?></span>
+                            <span class="text-muted small d-block fw-medium">Sesi Terverifikasi</span>
+                            <h3 class="fw-bold mb-0 text-dark"><?= htmlspecialchars($current_username); ?> 
+                                <span class="badge badge-soft-primary fs-6 align-middle fw-semibold"><?= htmlspecialchars($real_role); ?></span>
                             </h3>
                         </div>
                     </div>
@@ -189,11 +214,11 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                         <form action="" method="POST" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold text-secondary">Nama Lengkap & Gelar</label>
-                                <input type="text" name="nama" class="form-control" placeholder="Contoh: Budi Santoso, S.Kom." pattern="[A-Za-z\s\.\']+" title="Nama hanya boleh berisi huruf, spasi, dan titik." required>
+                                <input type="text" name="nama" class="form-control" placeholder="Contoh: Budi Santoso, S.Kom." required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold text-secondary">NIP / NIK Karyawan</label>
-                                <input type="text" name="nip" class="form-control" placeholder="Contoh: 198001012005011001" pattern="[0-9]+" title="Kolom harus berupa angka saja." required>
+                                <input type="text" name="nip" class="form-control" placeholder="Contoh: 198001012005011001" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold text-secondary">Jabatan / Divisi</label>
@@ -202,7 +227,7 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold text-secondary">Lampiran Berkas</label>
                                 <input type="file" name="foto" class="form-control" required>
-                                <div class="form-text text-muted" style="font-size: 11px;">Mendukung berkas format PDF, gambar, atau dokumen arsip.</div>
+                                <div class="form-text text-muted" style="font-size: 11px;">Format dibatasi: PDF, JPG, PNG, DOC, DOCX.</div>
                             </div>
                             <button type="submit" name="submit" class="btn btn-primary w-100 shadow-sm">
                                 <i class="fas fa-save me-1"></i> Simpan Data
@@ -214,7 +239,7 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                 <?php if ($is_admin): ?>
                 <div class="card bg-white mt-4">
                     <div class="card-header bg-transparent py-3">
-                        <span class="fw-bold text-dark"><i class="fas fa-history text-secondary me-2"></i> Log Aktivitas Sistem</span>
+                        <span class="fw-bold text-dark"><i class="fas fa-history text-secondary me-2"></i> Log Audit Keamanan</span>
                     </div>
                     <div class="card-body p-3">
                         <div class="list-group list-group-flush small">
@@ -282,7 +307,7 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                                     <i class="fas fa-lock fa-2x"></i>
                                 </div>
                                 <h6 class="fw-bold text-dark">Akses Terbatas Administrator</h6>
-                                <p class="small text-muted mb-0" style="max-width: 400px; margin: 0 auto;">Modul rekapitulasi data dan arsip kepegawaian pusat hanya dapat diakses melalui kredensial tingkat Administrator.</p>
+                                <p class="small text-muted mb-0" style="max-width: 400px; margin: 0 auto;">Modul direktori kepegawaian pusat dilindungi oleh sistem otorisasi tingkat lanjut. Percobaan akses ilegal akan terekam pada log auditor.</p>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -294,7 +319,7 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
     <footer class="bg-white text-center py-3 mt-auto border-top">
         <div class="container small text-muted">
             <p class="mb-1">© 2026 Divisi Teknologi Informasi — <strong>PT Telekomunikasi Media Nusantara</strong></p>
-            <p class="mb-0" style="font-size: 11px;">SIMPEG Enterprise System v3.4.2</p>
+            <p class="mb-0" style="font-size: 11px;">SIMPEG Enterprise System v3.5.0-Hardened</p>
         </div>
     </footer>
 
