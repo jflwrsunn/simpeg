@@ -6,42 +6,59 @@ if (!isset($_SESSION['username'])) {
 }
 include 'config.php';
 
-// Cek apakah user saat ini memiliki role Administrator
 $is_admin = isset($_SESSION['role']) && strpos(strtolower($_SESSION['role']), 'admin') !== false;
 
 $message = "";
+$error_msg = "";
+
 if (isset($_POST['submit'])) {
-    $nama = $_POST['nama'];
-    $nip = $_POST['nip'];
-    $jabatan = $_POST['jabatan'];
+    $nama = trim($_POST['nama']);
+    $nip = trim($_POST['nip']);
+    $jabatan = trim($_POST['jabatan']);
     
-    $target_dir = __DIR__ . "/uploads/";
-    if (is_file(__DIR__ . "/uploads")) {
-        unlink(__DIR__ . "/uploads");
-    }
-    if (!is_dir($target_dir)) {
-        mkdir($target_dir, 0777, true);
-    }
-    
-    $original_name = basename($_FILES['foto']['name']);
-    $file_name = time() . "_" . preg_replace("/\s+/", "_", $original_name);
-    $target_file = $target_dir . $file_name;
-    
-    if (move_uploaded_file($_FILES['foto']['tmp_name'], $target_file)) {
-        $conn->query("INSERT INTO pegawai (nama, nip, jabatan, foto) VALUES ('$nama', '$nip', '$jabatan', '$file_name')");
+    // Validasi ketat di Backend
+    if (!preg_match("/^[a-zA-Z\s\.\']+$/", $nama)) {
+        $error_msg = "Format Nama tidak valid. Nama hanya boleh berisi huruf, spasi, dan titik.";
+    } 
+    elseif (!ctype_digit($nip)) {
+        $error_msg = "Format NIP/NIK tidak valid. Kolom harus berupa angka.";
+    } 
+    else {
+        $target_dir = __DIR__ . "/uploads/";
+        if (is_file(__DIR__ . "/uploads")) {
+            unlink(__DIR__ . "/uploads");
+        }
+        if (!is_dir($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
         
-        $curr_user = $_SESSION['username'];
-        $conn->query("INSERT INTO activity_logs (username, activity) VALUES ('$curr_user', 'Mengunggah file lampiran: $file_name')");
+        $original_name = basename($_FILES['foto']['name']);
+        $file_name = time() . "_" . preg_replace("/\s+/", "_", $original_name);
+        $target_file = $target_dir . $file_name;
         
-        $message = "Dokumen arsip kepegawaian berhasil disinkronisasi ke server pusat.";
-    } else {
-        $message = "[ERROR-ERR_FILE_IO] Gagal memproses penyimpanan berkas ke direktori server. Periksa kembali ukuran atau ekstensi file.";
+        if (move_uploaded_file($_FILES['foto']['tmp_name'], $target_file)) {
+            $stmt = $conn->prepare("INSERT INTO pegawai (nama, nip, jabatan, foto) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $nama, $nip, $jabatan, $file_name);
+            $stmt->execute();
+            $stmt->close();
+            
+            $curr_user = $_SESSION['username'];
+            $log_stmt = $conn->prepare("INSERT INTO activity_logs (username, activity) VALUES (?, ?)");
+            $log_act = "Mengunggah file lampiran: $file_name";
+            $log_stmt->bind_param("ss", $curr_user, $log_act);
+            $log_stmt->execute();
+            $log_stmt->close();
+            
+            $message = "Dokumen arsip kepegawaian berhasil disinkronisasi ke server pusat.";
+        } else {
+            $error_msg = "[ERROR-ERR_FILE_IO] Gagal memproses penyimpanan berkas ke direktori server.";
+        }
     }
 }
 
-// Proteksi backend untuk aksi hapus (Hanya admin yang boleh mengeksekusi)
+// Proteksi backend untuk aksi hapus
 if (isset($_GET['hapus']) && $is_admin) {
-    $id = $_GET['hapus'];
+    $id = intval($_GET['hapus']);
     $conn->query("DELETE FROM pegawai WHERE id = $id");
     
     $curr_user = $_SESSION['username'];
@@ -51,7 +68,6 @@ if (isset($_GET['hapus']) && $is_admin) {
     exit;
 }
 
-// Ambil data hanya jika admin (menghemat resource dan memperketat akses backend)
 $result = null;
 $logs_result = null;
 if ($is_admin) {
@@ -66,9 +82,9 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIMPEG — Badan Siber dan Sandi Negara</title>
-    <!-- Favicon BSSN -->
-    <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/9/9f/Logo_Badan_Siber_dan_Sandi_Negara.png" type="image/png">
+    <title>SIMPEG — PT Telekomunikasi Media Nusantara</title>
+    <!-- Favicon Korporat -->
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2921/2921222.png" type="image/png">
     <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
@@ -146,9 +162,9 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
         <div class="container-fluid">
             <a class="navbar-brand fw-bold text-dark d-flex align-items-center" href="index.php">
                 <div class="bg-dark text-white rounded-3 p-2 me-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                    <i class="fas fa-shield-alt fa-sm"></i>
+                    <i class="fas fa-network-wired fa-sm"></i>
                 </div>
-                <span>SIMPEG <span class="text-muted fw-normal fs-6">BSSN</span></span>
+                <span>SIMPEG <span class="text-muted fw-normal fs-6">Enterprise Corp</span></span>
             </a>
             <div class="ms-auto d-flex align-items-center gap-2">
                 <a href="report.php" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-chart-bar me-1 text-primary"></i> Laporan</a>
@@ -167,15 +183,22 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                     <i class="fas fa-bullhorn fa-lg"></i>
                 </div>
                 <div>
-                    <h6 class="fw-bold mb-1">Pengumuman Kedinasan Sistem</h6>
-                    <p class="mb-0 small text-light opacity-75">Pemeliharaan rutin infrastruktur pusat data dijadwalkan pada hari Jumat pukul 21.00 WIB.</p>
+                    <h6 class="fw-bold mb-1">Pengumuman Internal Korporat</h6>
+                    <p class="mb-0 small text-light opacity-75">Pemeliharaan rutin infrastruktur server pusat dijadwalkan pada hari Jumat pukul 21.00 WIB.</p>
                 </div>
             </div>
         </div>
 
         <?php if($message): ?>
-            <div class="alert alert-info alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
-                <i class="fas fa-info-circle me-2"></i><?= $message; ?>
+            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
+                <i class="fas fa-check-circle me-2"></i><?= $message; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if($error_msg): ?>
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i><?= $error_msg; ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
@@ -213,7 +236,7 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
         </div>
 
         <div class="row g-4">
-            <!-- Form Upload -->
+            <!-- Form Upload dengan Validasi Frontend HTML5 -->
             <div class="col-lg-4">
                 <div class="card bg-white">
                     <div class="card-header bg-transparent py-3">
@@ -223,15 +246,17 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                         <form action="" method="POST" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold text-secondary">Nama Lengkap & Gelar</label>
-                                <input type="text" name="nama" class="form-control" placeholder="Contoh: Budi Santoso, S.Kom." required>
+                                <!-- Validasi Frontend: hanya huruf, spasi, titik -->
+                                <input type="text" name="nama" class="form-control" placeholder="Contoh: Budi Santoso, S.Kom." pattern="[A-Za-z\s\.\']+" title="Nama hanya boleh berisi huruf, spasi, dan titik." required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small fw-semibold text-secondary">NIP</label>
-                                <input type="text" name="nip" class="form-control" placeholder="198xxxx xxxxx x xxx" required>
+                                <label class="form-label small fw-semibold text-secondary">NIP / NIK Karyawan</label>
+                                <!-- Validasi Frontend: hanya angka -->
+                                <input type="text" name="nip" class="form-control" placeholder="Contoh: 198001012005011001" pattern="[0-9]+" title="Kolom harus berupa angka saja." required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small fw-semibold text-secondary">Jabatan</label>
-                                <input type="text" name="jabatan" class="form-control" placeholder="Analis Sandi Madya" required>
+                                <label class="form-label small fw-semibold text-secondary">Jabatan / Divisi</label>
+                                <input type="text" name="jabatan" class="form-control" placeholder="Senior Infrastructure Analyst" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold text-secondary">Lampiran Berkas</label>
@@ -245,7 +270,7 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                     </div>
                 </div>
 
-                <!-- Widget Aktivitas Terakhir (Hanya muncul jika Administrator) -->
+                <!-- Widget Aktivitas Terakhir (Hanya Admin) -->
                 <?php if ($is_admin): ?>
                 <div class="card bg-white mt-4">
                     <div class="card-header bg-transparent py-3">
@@ -270,7 +295,7 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
             <div class="col-lg-8">
                 <div class="card bg-white">
                     <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
-                        <span class="fw-bold text-dark"><i class="fas fa-table text-primary me-2"></i> Daftar Pegawai & Arsip File</span>
+                        <span class="fw-bold text-dark"><i class="fas fa-table text-primary me-2"></i> Daftar Karyawan & Arsip File</span>
                         <span class="badge badge-soft-danger px-2 py-1 fw-medium">Khusus Admin</span>
                     </div>
                     <div class="card-body p-0">
@@ -280,7 +305,7 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                                     <thead>
                                         <tr>
                                             <th class="ps-4">No</th>
-                                            <th>Pegawai</th>
+                                            <th>Karyawan</th>
                                             <th>Jabatan</th>
                                             <th>File Lampiran</th>
                                             <th class="text-center pe-4">Aksi</th>
@@ -330,8 +355,8 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
     <!-- Footer Modern -->
     <footer class="bg-white text-center py-3 mt-auto border-top">
         <div class="container small text-muted">
-            <p class="mb-1">© 2026 Direktorat Pengembangan Sistem Elektronik — <strong>Badan Siber dan Sandi Negara (BSSN)</strong></p>
-            <p class="mb-0" style="font-size: 11px;">SIMPEG Internal Enterprise v3.4.2</p>
+            <p class="mb-1">© 2026 Divisi Teknologi Informasi — <strong>PT Telekomunikasi Media Nusantara</strong></p>
+            <p class="mb-0" style="font-size: 11px;">SIMPEG Enterprise System v3.4.2</p>
         </div>
     </footer>
 
