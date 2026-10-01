@@ -1,7 +1,4 @@
 <?php
-?php if ($is_admin): ?>
-    <a href="pegawai.php" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-users me-1 text-success"></i> Data Pegawai</a>
-<?php endif; ?
 session_start();
 if (!isset($_SESSION['username'])) {
     header("Location: login.php");
@@ -116,10 +113,9 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                 <span>SIMPEG <span class="text-muted fw-normal fs-6">Enterprise Corp</span></span>
             </a>
             <div class="ms-auto d-flex align-items-center gap-2">
-                <a href="pegawai.php" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-users me-1 text-success"></i> Data Pegawai</a>
-                <a href="report.php" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-chart-bar me-1 text-primary"></i> Laporan</a>
-                <a href="helpdesk.php" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-headset me-1 text-info"></i> Bantuan</a>
-                <a href="profile.php?id=<?= $_SESSION['user_id']; ?>" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-user-cog me-1 text-dark"></i> Profil</a>
+                <?php if ($is_admin): ?>
+                    <a href="pegawai.php" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-users me-1 text-success"></i> Data Pegawai</a>
+                <?php endif; ?>
                 <a href="logout.php" class="btn btn-sm btn-danger fw-medium px-3"><i class="fas fa-sign-out-alt me-1"></i> Keluar</a>
             </div>
         </div>
