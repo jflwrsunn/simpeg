@@ -83,77 +83,23 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPEG — PT Telekomunikasi Media Nusantara</title>
-    <!-- Favicon Korporat -->
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2921/2921222.png" type="image/png">
-    <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f4f7f6;
-            color: #334155;
-        }
-        .navbar-custom {
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        }
-        .card-header {
-            background-color: transparent;
-            border-bottom: 1px solid #f1f5f9;
-            font-weight: 600;
-            padding: 1.25rem 1.5rem;
-        }
-        .btn-primary {
-            background-color: #0f172a;
-            border-color: #0f172a;
-            border-radius: 8px;
-            padding: 0.6rem 1rem;
-            font-weight: 500;
-        }
-        .btn-primary:hover {
-            background-color: #1e293b;
-            border-color: #1e293b;
-        }
-        .form-control, .form-select {
-            border-radius: 8px;
-            padding: 0.65rem 0.85rem;
-            border-color: #cbd5e1;
-        }
-        .form-control:focus {
-            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
-            border-color: #0f172a;
-        }
-        .table-custom th {
-            background-color: #f8fafc;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        .badge-soft-danger {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-        .badge-soft-primary {
-            background-color: #e0f2fe;
-            color: #0369a1;
-        }
-        .alert-announcement {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: white;
-            border-radius: 12px;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #334155; }
+        .navbar-custom { background: #ffffff; border-bottom: 1px solid #e2e8f0; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        .card-header { background-color: transparent; border-bottom: 1px solid #f1f5f9; font-weight: 600; padding: 1.25rem 1.5rem; }
+        .btn-primary { background-color: #0f172a; border-color: #0f172a; border-radius: 8px; padding: 0.6rem 1rem; font-weight: 500; }
+        .btn-primary:hover { background-color: #1e293b; border-color: #1e293b; }
+        .form-control, .form-select { border-radius: 8px; padding: 0.65rem 0.85rem; border-color: #cbd5e1; }
+        .form-control:focus { box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1); border-color: #0f172a; }
+        .table-custom th { background-color: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border-bottom: 2px solid #e2e8f0; }
+        .badge-soft-danger { background-color: #fee2e2; color: #991b1b; }
+        .badge-soft-primary { background-color: #e0f2fe; color: #0369a1; }
+        .alert-announcement { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; border-radius: 12px; }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -167,6 +113,7 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                 <span>SIMPEG <span class="text-muted fw-normal fs-6">Enterprise Corp</span></span>
             </a>
             <div class="ms-auto d-flex align-items-center gap-2">
+                <a href="pegawai.php" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-users me-1 text-success"></i> Data Pegawai</a>
                 <a href="report.php" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-chart-bar me-1 text-primary"></i> Laporan</a>
                 <a href="helpdesk.php" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-headset me-1 text-info"></i> Bantuan</a>
                 <a href="profile.php?id=<?= $_SESSION['user_id']; ?>" class="btn btn-sm btn-light border text-secondary fw-medium"><i class="fas fa-user-cog me-1 text-dark"></i> Profil</a>
@@ -176,7 +123,6 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
     </nav>
 
     <div class="container my-4 flex-grow-1">
-        <!-- Banner Pengumuman Estetik -->
         <div class="alert alert-announcement shadow-sm p-4 mb-4 border-0 d-flex align-items-center justify-content-between" role="alert">
             <div class="d-flex align-items-center">
                 <div class="bg-white bg-opacity-15 p-3 rounded-3 me-3 text-info">
@@ -203,7 +149,6 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
             </div>
         <?php endif; ?>
 
-        <!-- Statistik Ringkas -->
         <div class="row g-3 mb-4">
             <div class="col-md-6">
                 <div class="card p-3 bg-white">
@@ -236,7 +181,6 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
         </div>
 
         <div class="row g-4">
-            <!-- Form Upload dengan Validasi Frontend HTML5 -->
             <div class="col-lg-4">
                 <div class="card bg-white">
                     <div class="card-header bg-transparent py-3">
@@ -246,12 +190,10 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                         <form action="" method="POST" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold text-secondary">Nama Lengkap & Gelar</label>
-                                <!-- Validasi Frontend: hanya huruf, spasi, titik -->
                                 <input type="text" name="nama" class="form-control" placeholder="Contoh: Budi Santoso, S.Kom." pattern="[A-Za-z\s\.\']+" title="Nama hanya boleh berisi huruf, spasi, dan titik." required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold text-secondary">NIP / NIK Karyawan</label>
-                                <!-- Validasi Frontend: hanya angka -->
                                 <input type="text" name="nip" class="form-control" placeholder="Contoh: 198001012005011001" pattern="[0-9]+" title="Kolom harus berupa angka saja." required>
                             </div>
                             <div class="mb-3">
@@ -270,7 +212,6 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                     </div>
                 </div>
 
-                <!-- Widget Aktivitas Terakhir (Hanya Admin) -->
                 <?php if ($is_admin): ?>
                 <div class="card bg-white mt-4">
                     <div class="card-header bg-transparent py-3">
@@ -291,7 +232,6 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
                 <?php endif; ?>
             </div>
 
-            <!-- Tabel Data Khusus Admin -->
             <div class="col-lg-8">
                 <div class="card bg-white">
                     <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
@@ -352,7 +292,6 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
         </div>
     </div>
 
-    <!-- Footer Modern -->
     <footer class="bg-white text-center py-3 mt-auto border-top">
         <div class="container small text-muted">
             <p class="mb-1">© 2026 Divisi Teknologi Informasi — <strong>PT Telekomunikasi Media Nusantara</strong></p>
@@ -360,7 +299,6 @@ $total_pegawai = $conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_as
         </div>
     </footer>
 
-    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
