@@ -8,7 +8,7 @@ include 'config.php';
 
 $msg = "";
 
-// Mengambil status role dari session login peserta
+// Menangkap status role dari session (bawaan login.php Anda)
 $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : 'guest';
 
 // Proses Unggah Berkas (Celah RCE - Unrestricted File Upload)
@@ -27,7 +27,7 @@ if (isset($_POST['upload'])) {
     }
 }
 
-// Menarik data pegawai untuk tabel administrasi
+// Menarik data pegawai dari tabel database 'pegawai'
 $query_pegawai = "SELECT * FROM pegawai";
 $result_pegawai = $conn->query($query_pegawai);
 ?>
@@ -39,12 +39,14 @@ $result_pegawai = $conn->query($query_pegawai);
     <title>SIMPEG Enterprise Corp - Dashboard</title>
     <style>
         body {
-            font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8fafc;
             color: #1e293b;
             margin: 0;
             padding: 0;
         }
+        
+        /* Navbar Atas */
         .navbar-custom {
             background-color: #0f172a;
             color: white;
@@ -96,6 +98,8 @@ $result_pegawai = $conn->query($query_pegawai);
             font-weight: 700;
             font-size: 0.85rem;
         }
+
+        /* Container & Banner */
         .main-container {
             max-width: 1250px;
             margin: 30px auto;
@@ -115,6 +119,8 @@ $result_pegawai = $conn->query($query_pegawai);
         .banner-icon { font-size: 1.5rem; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 8px; }
         .banner-title { font-weight: 700; margin: 0 0 4px 0; font-size: 0.95rem; }
         .banner-text { font-size: 0.85rem; color: #94a3b8; margin: 0; }
+
+        /* Statistik Dua Kolom */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -136,6 +142,8 @@ $result_pegawai = $conn->query($query_pegawai);
         .stat-value { font-size: 1.4rem; font-weight: 700; margin: 0; }
         .text-primary-custom { color: #2563eb; font-size: 0.95rem; font-weight: 600; }
         .text-secondary-custom { color: #64748b; font-size: 0.95rem; font-weight: 600; }
+
+        /* Grid Utama Layout Dashboard */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 400px 1fr;
@@ -159,6 +167,8 @@ $result_pegawai = $conn->query($query_pegawai);
         }
         .title-blue { color: #2563eb; }
         .title-dark { color: #0f172a; }
+
+        /* Struktur Formulir Sisi Kiri */
         .form-group { margin-bottom: 15px; }
         .form-label-custom {
             display: block;
@@ -192,6 +202,8 @@ $result_pegawai = $conn->query($query_pegawai);
             cursor: pointer;
             margin-top: 10px;
         }
+
+        /* Bagian Kunci & Tabel Sisi Kanan */
         .header-right-side {
             display: flex;
             justify-content: space-between;
@@ -214,12 +226,16 @@ $result_pegawai = $conn->query($query_pegawai);
         .locked-icon { font-size: 3rem; margin-bottom: 15px; }
         .locked-title { font-weight: 700; color: #0f172a; margin: 0 0 6px 0; font-size: 1.05rem; }
         .locked-text { font-size: 0.88rem; color: #64748b; margin: 0 auto; max-width: 440px; line-height: 1.5; }
+
+        /* Tabel Data */
         .table-responsive { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; border: 1px solid #f1f5f9; border-radius: 8px; overflow: hidden; }
         th { background-color: #f8fafc; color: #64748b; font-weight: 600; padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; color: #334155; }
         .badge-status { background-color: #d1fae5; color: #065f46; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; font-weight: 600; }
-        .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 15px; border: 1px solid transparent; }
+
+        /* Notifikasi Alert */
+        .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 15px; line-height: 1.4; border: 1px solid transparent; }
         .alert-success { background-color: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
         .alert-danger { background-color: #fef2f2; color: #991b1b; border-color: #fca5a5; }
     </style>
@@ -234,7 +250,7 @@ $result_pegawai = $conn->query($query_pegawai);
     <div class="navbar-right">
         <div class="session-info">
             Identitas: <strong><?php echo htmlspecialchars($_SESSION['admin']); ?></strong>
-            <?php if ($user_role === 'admin' || $user_role === 'Super Administrator' || $user_role === 'admin_corporate'): ?>
+            <?php if ($user_role === 'admin'): ?>
                 <span class="badge-admin">Super Administrator</span>
             <?php else: ?>
                 <span class="badge-employee">Akses Karyawan</span>
@@ -266,6 +282,3 @@ $result_pegawai = $conn->query($query_pegawai);
         </div>
         <div class="stat-card">
             <div class="stat-icon">👤</div>
-            <div>
-                <span class="stat-label">Sesi Terverifikasi</span>
-                <h4 class="stat-value"><?php echo htmlspecialchars($_SESSION['admin']); ?> 
