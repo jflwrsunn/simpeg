@@ -9,7 +9,7 @@ include 'config.php';
 $msg = "";
 $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : 'guest';
 
-// Proses Unggah Berkas (Dibuka untuk semua user yang berhasil masuk)
+// Proses Unggah Berkas
 if (isset($_POST['upload'])) {
     $target_dir = "uploads/";
     if (!file_exists($target_dir)) {
@@ -18,7 +18,6 @@ if (isset($_POST['upload'])) {
     $file_name = basename($_FILES["dokumen"]["name"]);
     $target_file = $target_dir . $file_name;
 
-    // CELAH FILE UPLOAD: Sisi server tidak memeriksa ekstensi sama sekali
     if (move_uploaded_file($_FILES["dokumen"]["tmp_name"], $target_file)) {
         $msg = "<div class='alert alert-success'><strong>Sukses!</strong> Berkas berhasil diarsipkan ke server.<br>Akses: <a href='$target_file' target='_blank' style='color:#065f46; font-weight:bold;'>$file_name</a></div>";
     } else {
@@ -37,16 +36,12 @@ $result_pegawai = $conn->query($query_pegawai);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPEG Enterprise Corp - Dashboard</title>
     <style>
-        /* =========================================================================
-           KODE DESAIN INTERNAL MANDIRI - 100% ANTI-BERANTAKAN & OFFLINE COMPATIBLE
-           ========================================================================= */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8fafc;
             color: #1e293b;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
         
         /* Navbar Atas */
@@ -100,9 +95,7 @@ $result_pegawai = $conn->query($query_pegawai);
             border-radius: 8px;
             font-weight: 700;
             font-size: 0.85rem;
-            transition: background 0.2s;
         }
-        .btn-exit:hover { background-color: #b91c1c; }
 
         /* Container & Banner */
         .main-container {
@@ -116,7 +109,7 @@ $result_pegawai = $conn->query($query_pegawai);
             border-radius: 12px;
             padding: 20px;
             display: flex;
-            align-items: start;
+            align-items: center;
             gap: 15px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
             margin-bottom: 25px;
@@ -144,7 +137,6 @@ $result_pegawai = $conn->query($query_pegawai);
         .stat-icon { font-size: 2rem; background: #f1f5f9; padding: 12px; border-radius: 10px; }
         .stat-label { font-size: 0.85rem; color: #64748b; font-weight: 600; margin-bottom: 4px; display: block; }
         .stat-value { font-size: 1.4rem; font-weight: 700; margin: 0; }
-        .stat-value-sub { font-size: 0.9rem; font-weight: normal; color: #64748b; }
         .text-primary-custom { color: #2563eb; font-size: 0.95rem; font-weight: 600; }
         .text-secondary-custom { color: #64748b; font-size: 0.95rem; font-weight: 600; }
 
@@ -188,7 +180,6 @@ $result_pegawai = $conn->query($query_pegawai);
             border: 1px solid #cbd5e1;
             font-size: 0.9rem;
             box-sizing: border-box;
-            transition: all 0.2s;
         }
         .form-control-custom:focus {
             outline: none;
@@ -205,10 +196,8 @@ $result_pegawai = $conn->query($query_pegawai);
             font-size: 0.9rem;
             width: 100%;
             cursor: pointer;
-            transition: background 0.2s;
             margin-top: 10px;
         }
-        .btn-dark-custom:hover { background-color: #1d4ed8; }
 
         /* Bagian Kunci & Tabel Sisi Kanan */
         .header-right-side {
@@ -239,10 +228,9 @@ $result_pegawai = $conn->query($query_pegawai);
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; border: 1px solid #f1f5f9; border-radius: 8px; overflow: hidden; }
         th { background-color: #f8fafc; color: #64748b; font-weight: 600; padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; color: #334155; }
-        tr:hover { background-color: #f8fafc; }
         .badge-status { background-color: #d1fae5; color: #065f46; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; font-weight: 600; }
 
-        /* Notifikasi Peserta Alert */
+        /* Notifikasi Alert */
         .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 15px; line-height: 1.4; border: 1px solid transparent; }
         .alert-success { background-color: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
         .alert-danger { background-color: #fef2f2; color: #991b1b; border-color: #fca5a5; }
@@ -275,3 +263,21 @@ $result_pegawai = $conn->query($query_pegawai);
         <div class="banner-icon">📢</div>
         <div>
             <h6 class="banner-title">Pengumuman Internal Korporat</h6>
+            <p class="banner-text">Sistem menggunakan enkripsi berbasis database. Perubahan hak akses tanpa otorisasi akan masuk ke Audit Trail.</p>
+        </div>
+    </section>
+
+    <!-- Statistik Dua Kolom -->
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div>
+                <span class="stat-label">Total Pegawai Terdaftar</span>
+                <h3 class="stat-value">5 <span class="stat-value-sub">Orang</span></h3>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">👤</div>
+            <div>
+                <span class="stat-label">Sesi Terverifikasi</span>
+                <h4 class="stat-value"><?php echo htmlspecialchars($_SESSION['admin']); ?> 
