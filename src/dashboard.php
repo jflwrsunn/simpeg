@@ -12,8 +12,11 @@ include 'config.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPEG Enterprise - Dashboard</title>
-    <!-- Memanggil Bootstrap Lokal -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FIX PATH: Memanggil Bootstrap internal dari server Docker Anda -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
         .navbar-dark-custom { background-color: #0f172a; }

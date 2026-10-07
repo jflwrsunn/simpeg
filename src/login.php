@@ -8,7 +8,7 @@ if (isset($_POST['login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    // CELAH SQL INJECTION: String concatenation langsung
+    // VULNERABILITY: SQL Injection tetap aktif dan 100% bisa dijebol
     $query = "SELECT id, username, password, role FROM users WHERE username = '$username' AND password = '$password'";
     $result = $conn->query($query);
 
@@ -29,8 +29,11 @@ if (isset($_POST['login'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPEG Enterprise - Otentikasi Portal</title>
-    <!-- Memanggil Bootstrap Lokal agar anti-gagal/offline -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FIX PATH: Memanggil Bootstrap internal dari server Docker Anda -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    
     <style>
         body {
             background-color: #f8f9fa;
