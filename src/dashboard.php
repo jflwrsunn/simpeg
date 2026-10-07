@@ -7,7 +7,7 @@ if (!isset($_SESSION['admin'])) {
 include 'config.php';
 
 $msg = "";
-$user_role = isset((_SESSION['role']) ?)_SESSION['role'] : 'guest';
+$user_role = isset($_SESSION['role']) ? $_SESSION['role'] : 'guest';
 
 if (isset($_POST['upload']) && (user_role === 'admin') {)target_dir = "uploads/";
     if (!file_exists($target_dir)) { 
