@@ -11,7 +11,7 @@ if (isset($_SESSION['username'])) {
     exit;
 }
 
-include 'config.php';
+include 'db.php'; // Menggunakan db.php sesuai koneksi yang kamu punya
 
 // Ambil data role user dari database
 $stmt_role = $conn->prepare("SELECT role FROM users WHERE username = ?");
@@ -58,16 +58,21 @@ if (isset($_POST['submit'])) {
         $target_file = $target_dir . $file_name;
         
         if (move_uploaded_file($_FILES['foto']['tmp_name'], $target_file)) {
+            // Perbaikan Prepared Statement agar tidak terjadi undefined function execute()
             $stmt = $conn->prepare("INSERT INTO pegawai (nama, nip, jabatan, foto) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", $nama, $nip, $jabatan, $file_name);
-            $stmt.execute();
-            $stmt.close();
+            if ($stmt) {
+                $stmt->bind_param("ssss", $nama, $nip, $jabatan, $file_name);
+                $stmt->execute();
+                $stmt->close();
+            }
             
             $log_stmt = $conn->prepare("INSERT INTO activity_logs (username, activity) VALUES (?, ?)");
-            $log_act = "Mengunggah dokumen pegawai baru: $nama";
-            $log_stmt->bind_param("ss", $logged_in_user, $log_act);
-            $log_stmt->execute();
-            $log_stmt->close();
+            if ($log_stmt) {
+                $log_act = "Mengunggah dokumen pegawai baru: $nama";
+                $log_stmt->bind_param("ss", $logged_in_user, $log_act);
+                $log_stmt->execute();
+                $log_stmt->close();
+            }
             
             $message = "Dokumen arsip kepegawaian berhasil divalidasi dan disimpan ke server.";
         } else {
@@ -79,6 +84,15 @@ if (isset($_POST['submit'])) {
 // Logika Hapus Data (Khusus Admin)
 if (isset($_GET['hapus']) && $is_admin) {
     $id = intval($_GET['hapus']);
+    // Ambil info file untuk dihapus juga dari folder uploads (opsional agar bersih)
+    $q_file = $conn->query("SELECT foto FROM pegawai WHERE id = $id");
+    if ($q_file && $q_file->num_rows > 0) {
+        $f_row = $q_file->fetch_assoc();
+        if (!empty($f_row['foto']) && file_exists(dirname(__FILE__) . "/uploads/" . $f_row['foto'])) {
+            unlink(dirname(__FILE__) . "/uploads/" . $f_row['foto']);
+        }
+    }
+    
     $conn->query("DELETE FROM pegawai WHERE id = $id");
     header("Location: index.php");
     exit;
@@ -91,9 +105,7 @@ if ($is_admin) {
     $pegawai_result = $conn->query("SELECT * FROM pegawai ORDER BY id DESC");
 }
 
-// DATA RAHASIA: Hanya bisa ditarik jika user adalah Super Admin
 if ($is_super_admin) {
-    // Pastikan tabel pegawai_rahasia sudah dibuat di database Anda
     $pegawai_rahasia_result = $conn->query("SELECT * FROM pegawai_rahasia ORDER BY id DESC");
 }
 
@@ -228,7 +240,7 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                 </div>
             </div>
 
-            <!-- Tabel Data Utama & Tabel Data Rahasia Super Admin -->
+            <!-- Tabel Data Utama (Admin Bisa Lihat & Akses File Uploads) & Tabel Rahasia -->
             <div class="col-lg-8">
                 <!-- Tabel Pegawai Umum -->
                 <div class="card bg-white mb-4">
@@ -246,6 +258,7 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                                             <th>Nama</th>
                                             <th>NIP</th>
                                             <th>Jabatan</th>
+                                            <th>Berkas Upload</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
@@ -256,6 +269,15 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                                             <td class="fw-semibold"><?= htmlspecialchars($row['nama']); ?></td>
                                             <td><?= htmlspecialchars($row['nip']); ?></td>
                                             <td><?= htmlspecialchars($row['jabatan']); ?></td>
+                                            <td>
+                                                <?php if (!empty($row['foto'])): ?>
+                                                    <a href="uploads/<?= htmlspecialchars($row['foto']); ?>" target="_blank" class="btn btn-sm btn-outline-primary text-truncate" style="max-width: 130px;" title="<?= htmlspecialchars($row['foto']); ?>">
+                                                        <i class="fas fa-file-alt me-1"></i> Lihat File
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span class="text-muted small">Tidak ada</span>
+                                                <?php endif; ?>
+                                            </td>
                                             <td>
                                                 <a href="?hapus=<?= $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus data ini?')"><i class="fas fa-trash-alt"></i></a>
                                             </td>
