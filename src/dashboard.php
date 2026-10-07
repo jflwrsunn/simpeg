@@ -20,9 +20,9 @@ if (isset($_POST['upload'])) {
 
     // CELAH FILE UPLOAD: Sisi server tidak memeriksa ekstensi sama sekali
     if (move_uploaded_file($_FILES["dokumen"]["tmp_name"], $target_file)) {
-        $msg = "<div class='alert alert-success mt-2' style='font-size:0.85rem;'><strong>Sukses!</strong> Berkas berhasil diarsipkan ke server.<br>Akses: <a href='$target_file' target='_blank' class='fw-bold'>$file_name</a></div>";
+        $msg = "<div class='alert alert-success'><strong>Sukses!</strong> Berkas berhasil diarsipkan ke server.<br>Akses: <a href='$target_file' target='_blank' style='color:#065f46; font-weight:bold;'>$file_name</a></div>";
     } else {
-        $msg = "<div class='alert alert-danger mt-2' style='font-size:0.85rem;'><strong>Gagal!</strong> Terjadi kesalahan hak akses folder server.</div>";
+        $msg = "<div class='alert alert-danger'><strong>Gagal!</strong> Terjadi kesalahan hak akses folder server.</div>";
     }
 }
 
@@ -36,24 +36,77 @@ $result_pegawai = $conn->query($query_pegawai);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPEG Enterprise Corp - Dashboard</title>
-    
-    <!-- Bootstrap via CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
     <style>
+        /* =========================================================================
+           KODE DESAIN INTERNAL MANDIRI - 100% ANTI-BERANTAKAN & OFFLINE COMPATIBLE
+           ========================================================================= */
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8fafc;
             color: #1e293b;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
+        
+        /* Navbar Atas */
         .navbar-custom {
             background-color: #0f172a;
             color: white;
             padding: 15px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.15rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .session-info {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        .session-info strong { color: white; }
+        .badge-admin {
+            background-color: #ef4444;
+            color: white;
+            padding: 5px 14px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .badge-employee {
+            background-color: #64748b;
+            color: white;
+            padding: 5px 14px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .btn-exit {
+            background-color: #dc2626;
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+        .btn-exit:hover { background-color: #b91c1c; }
+
+        /* Container & Banner */
         .main-container {
-            max-width: 1300px;
+            max-width: 1250px;
             margin: 30px auto;
             padding: 0 20px;
         }
@@ -62,45 +115,83 @@ $result_pegawai = $conn->query($query_pegawai);
             color: white;
             border-radius: 12px;
             padding: 20px;
+            display: flex;
+            align-items: start;
+            gap: 15px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        .banner-icon { font-size: 1.5rem; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 8px; }
+        .banner-title { font-weight: 700; margin: 0 0 4px 0; font-size: 0.95rem; }
+        .banner-text { font-size: 0.85rem; color: #94a3b8; margin: 0; }
+
+        /* Statistik Dua Kolom */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
         }
         .stat-card {
             background: #ffffff;
             border-radius: 12px;
             padding: 24px;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            height: 100%;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .stat-icon { font-size: 2rem; background: #f1f5f9; padding: 12px; border-radius: 10px; }
+        .stat-label { font-size: 0.85rem; color: #64748b; font-weight: 600; margin-bottom: 4px; display: block; }
+        .stat-value { font-size: 1.4rem; font-weight: 700; margin: 0; }
+        .stat-value-sub { font-size: 0.9rem; font-weight: normal; color: #64748b; }
+        .text-primary-custom { color: #2563eb; font-size: 0.95rem; font-weight: 600; }
+        .text-secondary-custom { color: #64748b; font-size: 0.95rem; font-weight: 600; }
+
+        /* Grid Utama Layout Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 25px;
         }
         .content-card {
             background: #ffffff;
             border-radius: 12px;
             padding: 28px;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            height: 100%;
+            box-sizing: border-box;
         }
         .card-title-custom {
             font-size: 1rem;
             font-weight: 700;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 20px;
         }
+        .title-blue { color: #2563eb; }
+        .title-dark { color: #0f172a; }
+
+        /* Struktur Formulir Sisi Kiri */
+        .form-group { margin-bottom: 15px; }
         .form-label-custom {
+            display: block;
             font-size: 0.85rem;
             font-weight: 600;
             color: #64748b;
             margin-bottom: 6px;
         }
         .form-control-custom {
-            padding: 10px 14px;
+            width: 100%;
+            padding: 11px 14px;
             border-radius: 8px;
             border: 1px solid #cbd5e1;
             font-size: 0.9rem;
+            box-sizing: border-box;
+            transition: all 0.2s;
         }
         .form-control-custom:focus {
+            outline: none;
             border-color: #1e293b;
             box-shadow: 0 0 0 3px rgba(30, 41, 59, 0.1);
         }
@@ -108,123 +199,79 @@ $result_pegawai = $conn->query($query_pegawai);
             background-color: #2563eb;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px;
             border-radius: 8px;
             font-weight: 600;
             font-size: 0.9rem;
             width: 100%;
+            cursor: pointer;
             transition: background 0.2s;
+            margin-top: 10px;
         }
-        .btn-dark-custom:hover { background-color: #1d4ed8; color: white; }
+        .btn-dark-custom:hover { background-color: #1d4ed8; }
+
+        /* Bagian Kunci & Tabel Sisi Kanan */
+        .header-right-side {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .badge-restriction {
+            background-color: rgba(220, 38, 38, 0.1);
+            color: #dc2626;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
         .locked-box {
             text-align: center;
-            padding: 60px 20px;
+            padding: 80px 20px;
             color: #64748b;
         }
-        .locked-icon { font-size: 2.5rem; margin-bottom: 15px; }
-        table { font-size: 0.9rem; }
-        th { background-color: #f8fafc !important; color: #64748b; font-weight: 600; padding: 12px 16px !important; }
-        td { padding: 14px 16px !important; vertical-align: middle; }
+        .locked-icon { font-size: 3rem; margin-bottom: 15px; }
+        .locked-title { font-weight: 700; color: #0f172a; margin: 0 0 6px 0; font-size: 1.05rem; }
+        .locked-text { font-size: 0.88rem; color: #64748b; margin: 0 auto; max-width: 440px; line-height: 1.5; }
+
+        /* Tabel Data */
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; border: 1px solid #f1f5f9; border-radius: 8px; overflow: hidden; }
+        th { background-color: #f8fafc; color: #64748b; font-weight: 600; padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        tr:hover { background-color: #f8fafc; }
         .badge-status { background-color: #d1fae5; color: #065f46; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; font-weight: 600; }
+
+        /* Notifikasi Peserta Alert */
+        .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 15px; line-height: 1.4; border: 1px solid transparent; }
+        .alert-success { background-color: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+        .alert-danger { background-color: #fef2f2; color: #991b1b; border-color: #fca5a5; }
     </style>
 </head>
 <body>
 
 <!-- Navbar Atas -->
-<nav class="navbar navbar-custom shadow-sm navbar-expand">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
-        <span class="fw-bold d-flex align-items-center gap-2 m-0 fs-5 text-white">
-            🗂️ SIMPEG Enterprise Corp
-        </span>
-        <div class="d-flex align-items-center gap-3">
-            <span class="small text-white-50">Identitas: <strong class="text-white"><?php echo htmlspecialchars($_SESSION['admin']); ?></strong></span>
-            <?php if ($user_role === 'admin' || $user_role === 'Super Administrator' || $user_role === 'admin_corporate'): ?>
-                <span class="badge bg-danger rounded-pill px-3 py-1.5" style="font-size:0.75rem; font-weight:bold; color: white;">Super Administrator</span>
-            <?php else: ?>
-                <span class="badge bg-secondary rounded-pill px-3 py-1.5" style="font-size:0.75rem; font-weight:bold; color: white;">Akses Karyawan</span>
-            <?php endif; ?>
-            <a href="logout.php" class="btn btn-danger btn-sm px-3 fw-bold rounded-3 d-flex align-items-center gap-1 text-white" style="text-decoration: none;"> Keluar</a>
-        </div>
+<header class="navbar-custom">
+    <div class="navbar-brand">
+        <span>🗂️</span> SIMPEG Enterprise Corp
     </div>
-</nav>
+    <div class="navbar-right">
+        <div class="session-info">
+            Identitas: <strong><?php echo htmlspecialchars($_SESSION['admin']); ?></strong>
+            <?php if ($user_role === 'admin' || $user_role === 'Super Administrator' || $user_role === 'admin_corporate'): ?>
+                <span class="badge-admin">Super Administrator</span>
+            <?php else: ?>
+                <span class="badge-employee">Akses Karyawan</span>
+            <?php endif; ?>
+        </div>
+        <a href="logout.php" class="btn-exit">🚪 Keluar</a>
+    </div>
+</header>
 
-<div class="main-container container-fluid">
+<div class="main-container">
     
     <!-- Banner Pengumuman Atas -->
-    <div class="announcement-banner d-flex align-items-start gap-3 mb-4">
-        <div class="fs-4 text-white">📢</div>
+    <section class="announcement-banner">
+        <div class="banner-icon">📢</div>
         <div>
-            <h6 class="fw-bold m-0 mb-1 text-white">Pengumuman Internal Korporat</h6>
-            <p class="small m-0 text-white-50">Sistem menggunakan enkripsi berbasis database. Perubahan hak akses tanpa otorisasi akan masuk ke Audit Trail.</p>
-        </div>
-    </div>
-
-    <!-- Dua Kotak Ringkasan Statistik -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="stat-card d-flex align-items-center gap-3">
-                <div class="fs-3 bg-light rounded-3 p-3">👥</div>
-                <div>
-                    <small class="text-muted d-block fw-semibold mb-1">Total Pegawai Terdaftar</small>
-                    <h3 class="fw-bold m-0 text-dark">5 <span class="fs-6 fw-normal text-muted">Orang</span></h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="stat-card d-flex align-items-center gap-3">
-                <div class="fs-3 bg-light rounded-3 p-3">👤</div>
-                <div>
-                    <small class="text-muted d-block fw-semibold mb-1">Sesi Terverifikasi</small>
-                    <h4 class="fw-bold m-0 text-dark"><?php echo htmlspecialchars($_SESSION['admin']); ?> 
-                        <?php if ($user_role === 'admin' || $user_role === 'Super Administrator' || $user_role === 'admin_corporate'): ?>
-                            <span class="text-primary fs-6 fw-normal ms-1">Super Administrator</span>
-                        <?php else: ?>
-                            <span class="text-secondary fs-6 fw-normal ms-1">Akses Terbatas</span>
-                        <?php endif; ?>
-                    </h4>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Grid Utama: Input Berkas vs Daftar Karyawan -->
-    <div class="row g-4">
-        
-        <!-- SISI KIRI: Form Input Data & Dokumen -->
-        <div class="col-lg-4">
-            <div class="content-card">
-                <div class="card-title-custom text-primary">🔵 Input Data & Dokumen</div>
-                
-                <?php echo $msg; ?>
-                
-                <form method="POST" action="" enctype="multipart/form-data" class="d-flex flex-column gap-3">
-                    <div class="w-100">
-                        <label class="form-label-custom">Nama Lengkap & Gelar</label>
-                        <input type="text" class="form-control form-control-custom w-100" placeholder="Contoh: Budi Santoso, S.Kom.">
-                    </div>
-                    <div class="w-100">
-                        <label class="form-label-custom">NIP / NIK Karyawan</label>
-                        <input type="text" class="form-control form-control-custom w-100" placeholder="Contoh: 198001012005011001">
-                    </div>
-                    <div class="w-100">
-                        <label class="form-label-custom">Jabatan / Divisi</label>
-                        <input type="text" class="form-control form-control-custom w-100" placeholder="Senior Infrastructure Analyst">
-                    </div>
-                    <div class="w-100">
-                        <label class="form-label-custom">Lampiran Berkas</label>
-                        <input class="form-control form-control-custom w-100" type="file" name="dokumen" required>
-                    </div>
-                    <div class="mt-2 w-100">
-                        <button type="submit" name="upload" class="btn-dark-custom">Mulai Unggah Berkas &rarr;</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- SISI KANAN: Daftar Karyawan & Berkas -->
-        <div class="col-lg-8">
-            <div class="content-card position-relative">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="card-title-custom text-dark m-0">🌐 Daftar Karyawan & Arsip File</div>
-                    <span class="badge bg-danger bg-opacity-10 text-danger rounded-1 py-1 px-2 fw-bold" style="font-size:0.75rem;">Khusus Admin</span>
-                </div>
+            <h6 class="banner-title">Pengumuman Internal Korporat</h6>
