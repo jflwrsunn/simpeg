@@ -7,9 +7,11 @@ if (!isset($_SESSION['admin'])) {
 include 'config.php';
 
 $msg = "";
+
+// Mengambil status role dari session login peserta
 $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : 'guest';
 
-// Proses Unggah Berkas
+// Proses Unggah Berkas (Celah RCE - Unrestricted File Upload)
 if (isset($_POST['upload'])) {
     $target_dir = "uploads/";
     if (!file_exists($target_dir)) {
@@ -19,9 +21,9 @@ if (isset($_POST['upload'])) {
     $target_file = $target_dir . $file_name;
 
     if (move_uploaded_file($_FILES["dokumen"]["tmp_name"], $target_file)) {
-        $msg = "<div class='alert alert-success'><strong>Sukses!</strong> Berkas berhasil diarsipkan ke server.<br>Akses: <a href='$target_file' target='_blank' style='color:#065f46; font-weight:bold;'>$file_name</a></div>";
+        $msg = "<div class='alert alert-success mt-2' style='font-size:0.85rem;'><strong>Sukses!</strong> Berkas berhasil diarsipkan ke server.<br>Akses: <a href='$target_file' target='_blank' class='fw-bold'>$file_name</a></div>";
     } else {
-        $msg = "<div class='alert alert-danger'><strong>Gagal!</strong> Terjadi kesalahan hak akses folder server.</div>";
+        $msg = "<div class='alert alert-danger mt-2' style='font-size:0.85rem;'><strong>Gagal!</strong> Terjadi kesalahan hak akses folder server.</div>";
     }
 }
 
@@ -37,14 +39,12 @@ $result_pegawai = $conn->query($query_pegawai);
     <title>SIMPEG Enterprise Corp - Dashboard</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
             background-color: #f8fafc;
             color: #1e293b;
             margin: 0;
             padding: 0;
         }
-        
-        /* Navbar Atas */
         .navbar-custom {
             background-color: #0f172a;
             color: white;
@@ -96,8 +96,6 @@ $result_pegawai = $conn->query($query_pegawai);
             font-weight: 700;
             font-size: 0.85rem;
         }
-
-        /* Container & Banner */
         .main-container {
             max-width: 1250px;
             margin: 30px auto;
@@ -117,8 +115,6 @@ $result_pegawai = $conn->query($query_pegawai);
         .banner-icon { font-size: 1.5rem; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 8px; }
         .banner-title { font-weight: 700; margin: 0 0 4px 0; font-size: 0.95rem; }
         .banner-text { font-size: 0.85rem; color: #94a3b8; margin: 0; }
-
-        /* Statistik Dua Kolom */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -133,14 +129,13 @@ $result_pegawai = $conn->query($query_pegawai);
             display: flex;
             align-items: center;
             gap: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
         }
         .stat-icon { font-size: 2rem; background: #f1f5f9; padding: 12px; border-radius: 10px; }
         .stat-label { font-size: 0.85rem; color: #64748b; font-weight: 600; margin-bottom: 4px; display: block; }
         .stat-value { font-size: 1.4rem; font-weight: 700; margin: 0; }
         .text-primary-custom { color: #2563eb; font-size: 0.95rem; font-weight: 600; }
         .text-secondary-custom { color: #64748b; font-size: 0.95rem; font-weight: 600; }
-
-        /* Grid Utama Layout Dashboard */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 400px 1fr;
@@ -152,6 +147,7 @@ $result_pegawai = $conn->query($query_pegawai);
             padding: 28px;
             border: 1px solid #e2e8f0;
             box-sizing: border-box;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
         }
         .card-title-custom {
             font-size: 1rem;
@@ -163,8 +159,6 @@ $result_pegawai = $conn->query($query_pegawai);
         }
         .title-blue { color: #2563eb; }
         .title-dark { color: #0f172a; }
-
-        /* Struktur Formulir Sisi Kiri */
         .form-group { margin-bottom: 15px; }
         .form-label-custom {
             display: block;
@@ -198,8 +192,6 @@ $result_pegawai = $conn->query($query_pegawai);
             cursor: pointer;
             margin-top: 10px;
         }
-
-        /* Bagian Kunci & Tabel Sisi Kanan */
         .header-right-side {
             display: flex;
             justify-content: space-between;
@@ -222,16 +214,12 @@ $result_pegawai = $conn->query($query_pegawai);
         .locked-icon { font-size: 3rem; margin-bottom: 15px; }
         .locked-title { font-weight: 700; color: #0f172a; margin: 0 0 6px 0; font-size: 1.05rem; }
         .locked-text { font-size: 0.88rem; color: #64748b; margin: 0 auto; max-width: 440px; line-height: 1.5; }
-
-        /* Tabel Data */
         .table-responsive { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; border: 1px solid #f1f5f9; border-radius: 8px; overflow: hidden; }
         th { background-color: #f8fafc; color: #64748b; font-weight: 600; padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; color: #334155; }
         .badge-status { background-color: #d1fae5; color: #065f46; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; font-weight: 600; }
-
-        /* Notifikasi Alert */
-        .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 15px; line-height: 1.4; border: 1px solid transparent; }
+        .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 15px; border: 1px solid transparent; }
         .alert-success { background-color: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
         .alert-danger { background-color: #fef2f2; color: #991b1b; border-color: #fca5a5; }
     </style>
@@ -273,7 +261,7 @@ $result_pegawai = $conn->query($query_pegawai);
             <div class="stat-icon">👥</div>
             <div>
                 <span class="stat-label">Total Pegawai Terdaftar</span>
-                <h3 class="stat-value">5 <span class="stat-value-sub">Orang</span></h3>
+                <h3 class="stat-value">5 <span class="stat-value-sub" style="font-size:0.9rem; font-weight:normal; color:#64748b;">Orang</span></h3>
             </div>
         </div>
         <div class="stat-card">
