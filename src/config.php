@@ -4,21 +4,21 @@ $user = 'simpeg_user';
 $pass = 'simpeg_password';
 $dbname = 'simpeg_db';
 
-$max_attempts = 5;
+$max_attempts = 10; // Mencoba hingga 10 kali
 $attempts = 0;
 $conn = false;
 
-// Loop untuk mencoba koneksi berulang kali jika database sedang booting
+// Melakukan perulangan jika database masih sibuk booting di latar belakang
 while ($attempts < $max_attempts) {
-    // Menggunakan tanda @ untuk menyembunyikan warning bawaan PHP saat mencoba koneksi
+    // Tanda @ berfungsi menyembunyikan warning bawaan PHP di layar browser
     $conn = @new mysqli($host, $user, $pass, $dbname);
     
     if (!$conn->connect_error) {
-        break; // Jika sukses terhubung, keluar dari loop
+        break; // Jika sukses terhubung, keluar dari perulangan
     }
     
     $attempts++;
-    sleep(2); // Tunggu 2 detik sebelum mencoba kembali
+    sleep(2); // Tunggu 2 detik sebelum mencoba menyambung kembali
 }
 
 if ($conn->connect_error) {
