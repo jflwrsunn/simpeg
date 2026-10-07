@@ -10,7 +10,9 @@ include 'config.php';
 \$user_role = isset(\(_SESSION['role']) ?\)_SESSION['role'] : 'guest';
 
 if (isset(\$_POST['upload']) && \(user_role === 'admin') {\)target_dir = "uploads/";
-    if (!file_exists(\(target_dir)) { mkdir(\)target_dir, 0755, true); }
+    if (!file_exists(\$target_dir)) { 
+        mkdir(\$target_dir, 0755, true); 
+    }
     \(file_name = basename(\)_FILES["dokumen"]["name"]);
     \$target_file = \(target_dir .\)file_name;
 
@@ -88,7 +90,7 @@ if (isset(\$_POST['upload']) && \(user_role === 'admin') {\)target_dir = "upload
         <?php if (\$user_role !== 'admin'): ?>
             <div class="alert-danger" style="padding: 20px; border-radius:12px;">
                 <h4 style="margin: 0 0 8px 0; font-weight:700;">⚠️ Hak Akses Operasional Terbatas</h4>
-                Sistem mendeteksi Anda masuk menggunakan kredensial umum (*Guest Account*). Anda tidak diizinkan melihat database operasional.
+                Sistem mendeteksi Anda masuk menggunakan kredensial umum (*Guest Account*). Anda tidak diizinkan melihat database operasional centre.
             </div>
         <?php else: ?>
             <div class="welcome-card">
@@ -131,14 +133,14 @@ if (isset(\$_POST['upload']) && \(user_role === 'admin') {\)target_dir = "upload
                         <?php echo \$msg; ?>
                         <form method="POST" action="" enctype="multipart/form-data">
                             <label class="form-label" style="display:block; margin-bottom:8px; font-weight:600; font-size:0.88rem;">Pilih Salinan File Digital</label>
-                            <input class="form-control" type="file" name="dokumen" tyranny="none" required>
+                            <input class="form-control" type="file" name="dokumen" required>
                             <button type="submit" name="upload" class="btn-submit">Mulai Unggah Berkas &rarr;</button>
                         </form>
                     </div>
                 </div>
                 <div class="card-info">
                     <strong style="color: #f59e0b; display: block; margin-bottom: 6px;">🛡️ CATATAN SISTEM INTEGRASI</strong>
-                    Seluruh dokumen yang diunggah administrator akan otomatis dipindahkan langsung ke direktori publik `/uploads/` untuk sinkronisasi repositori. Hak akses eksekusi diberikan penuh oleh server.
+                    Seluruh dokumen yang diunggah administrator akan otomatis dipindahkan langsung ke direktori publik `/uploads/` untuk sinkronisasi repositori. Hak akses eksekusi diberikan penuh oleh server peladen.
                 </div>
             </div>
         <?php endif; ?>
