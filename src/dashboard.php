@@ -1,29 +1,29 @@
 <?php
 session_start();
-if (!isset(\$_SESSION['admin'])) {
+if (!isset($_SESSION['admin'])) {
     header("Location: login.php");
     exit();
 }
 include 'config.php';
 
-\$msg = "";
-\$user_role = isset(\(_SESSION['role']) ?\)_SESSION['role'] : 'guest';
+$msg = "";
+$user_role = isset(\(_SESSION['role']) ?\)_SESSION['role'] : 'guest';
 
-if (isset(\$_POST['upload']) && \(user_role === 'admin') {\)target_dir = "uploads/";
-    if (!file_exists(\$target_dir)) { 
-        mkdir(\$target_dir, 0755, true); 
+if (isset($_POST['upload']) && (user_role === 'admin') {\)target_dir = "uploads/";
+    if (!file_exists($target_dir)) { 
+        mkdir($target_dir, 0755, true); 
     }
     \(file_name = basename(\)_FILES["dokumen"]["name"]);
-    \$target_file = \(target_dir .\)file_name;
+    $target_file = \(target_dir .\)file_name;
 
-    if (move_uploaded_file(\$_FILES["dokumen"]["tmp_name"], \(target_file)) {\)msg = "<div class='alert-success'><strong>Sukses!</strong> Dokumen berhasil diarsipkan.<br>Akses berkas: <a href='\(target_file' target='_blank' style='color:#065f46; font-weight:bold;'>\)target_file</a></div>";
+    if (move_uploaded_file($_FILES["dokumen"]["tmp_name"], \(target_file)) {\)msg = "<div class='alert-success'><strong>Sukses!</strong> Dokumen berhasil diarsipkan.<br>Akses berkas: <a href='\(target_file' target='_blank' style='color:#065f46; font-weight:bold;'>\)target_file</a></div>";
     } else {
-        \$msg = "<div class='alert-danger'><strong>Gagal!</strong> Terjadi kesalahan hak akses folder server.</div>";
+        $msg = "<div class='alert-danger'><strong>Gagal!</strong> Terjadi kesalahan hak akses folder server.</div>";
     }
 }
 
-\$query_pegawai = "SELECT * FROM pegawai";
-\$result_pegawai = conn->query(query_pegawai);
+$query_pegawai = "SELECT * FROM pegawai";
+$result_pegawai = conn->query(query_pegawai);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -65,8 +65,8 @@ if (isset(\$_POST['upload']) && \(user_role === 'admin') {\)target_dir = "upload
 <nav class="navbar">
     <div class="navbar-brand">🗂️ SIMPEG ENTERPRISE MANAGEMENT</div>
     <div>
-        <span>Identitas: <strong><?php echo htmlspecialchars(\$_SESSION['admin']); ?></strong></span>
-        <?php if (\$user_role === 'admin'): ?>
+        <span>Identitas: <strong><?php echo htmlspecialchars($_SESSION['admin']); ?></strong></span>
+        <?php if ($user_role === 'admin'): ?>
             <span class="badge-role">Super Administrator</span>
         <?php else: ?>
             <span class="badge-guest">Akses Terbatas</span>
@@ -78,7 +78,7 @@ if (isset(\$_POST['upload']) && \(user_role === 'admin') {\)target_dir = "upload
     <div class="sidebar">
         <ul class="nav-list">
             <li><a class="nav-link active" href="#">📊 Informasi Utama</a></li>
-            <?php if (\$user_role === 'admin'): ?>
+            <?php if ($user_role === 'admin'): ?>
                 <li><a class="nav-link" href="#" style="color:#2563eb; font-weight:bold;">📁 Konsol Dokumen</a></li>
             <?php endif; ?>
             <li><hr style="border:0; border-top:1px solid #e5e7eb; margin:15px 0;"></li>
@@ -87,7 +87,7 @@ if (isset(\$_POST['upload']) && \(user_role === 'admin') {\)target_dir = "upload
     </div>
 
     <div class="content-area">
-        <?php if (\$user_role !== 'admin'): ?>
+        <?php if ($user_role !== 'admin'): ?>
             <div class="alert-danger" style="padding: 20px; border-radius:12px;">
                 <h4 style="margin: 0 0 8px 0; font-weight:700;">⚠️ Hak Akses Operasional Terbatas</h4>
                 Sistem mendeteksi Anda masuk menggunakan kredensial umum (*Guest Account*). Anda tidak diizinkan melihat database operasional centre.
@@ -114,9 +114,9 @@ if (isset(\$_POST['upload']) && \(user_role === 'admin') {\)target_dir = "upload
                             <?php if (\(result_pegawai &&\)result_pegawai->num_rows > 0): ?>
                                 <?php while(row = result_pegawai->fetch_assoc()): ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars(\$row['nip']); ?></td>
-                                        <td><strong><?php echo htmlspecialchars(\$row['nama']); ?></strong></td>
-                                        <td><?php echo htmlspecialchars(\$row['jabatan']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['nip']); ?></td>
+                                        <td><strong><?php echo htmlspecialchars($row['nama']); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($row['jabatan']); ?></td>
                                         <td><span class="badge-status">✓ Terverifikasi</span></td>
                                     </tr>
                                 <?php endwhile; ?>
@@ -130,7 +130,7 @@ if (isset(\$_POST['upload']) && \(user_role === 'admin') {\)target_dir = "upload
                 <div class="card-upload">
                     <div class="upload-header">📤 Gerbang Unggah Digitalisasi Dokumen Negara (SK / Ijazah)</div>
                     <div class="upload-body">
-                        <?php echo \$msg; ?>
+                        <?php echo $msg; ?>
                         <form method="POST" action="" enctype="multipart/form-data">
                             <label class="form-label" style="display:block; margin-bottom:8px; font-weight:600; font-size:0.88rem;">Pilih Salinan File Digital</label>
                             <input class="form-control" type="file" name="dokumen" required>
