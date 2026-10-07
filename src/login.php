@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'config.php'; // Terhubung langsung ke file konfigurasi database Docker Anda
+include 'config.php';
 
 $error = "";
 
@@ -8,22 +8,14 @@ if (isset($_POST['login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    // =========================================================================
-    // CELAH KEAMANAN UTAMA (SQL INJECTION BYPASS)
-    // Kueri sengaja dibuat menggunakan penggabungan string langsung (concatenation)
-    // tanpa fungsi sanitasi ataupun Prepared Statements.
-    // =========================================================================
+    // CELAH SQL INJECTION: String concatenation langsung
     $query = "SELECT id, username, password, role FROM users WHERE username = '$username' AND password = '$password'";
     $result = $conn->query($query);
 
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
-        
-        // Menyimpan data identitas ke dalam sesi (Session) internal
         $_SESSION['admin'] = $row['username'];
         $_SESSION['role'] = $row['role']; 
-        
-        // Alihkan langsung ke halaman dashboard setelah sukses bypass
         header("Location: dashboard.php");
         exit();
     } else {
@@ -37,8 +29,8 @@ if (isset($_POST['login'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPEG Enterprise - Otentikasi Portal</title>
-    <!-- Memanggil Bootstrap 5 Resmi via CDN -->
-    <link href="https://jsdelivr.net" rel="stylesheet">
+    <!-- Memanggil Bootstrap Lokal agar anti-gagal/offline -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             background-color: #f8f9fa;
@@ -118,6 +110,5 @@ if (isset($_POST['login'])) {
     </div>
 </div>
 
-<script src="https://jsdelivr.net"></script>
 </body>
 </html>
