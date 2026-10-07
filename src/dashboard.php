@@ -154,7 +154,7 @@ $result_pegawai = $conn->query($query_pegawai);
     <!-- Area Konten Utama -->
     <div class="content-area">
         
-        <!-- KONDISI 1: JIKA PESERTA TERJEBAK DI AKUN TAMU / BUKAN ADMIN -->
+        <!-- KONDISI 1: JIKA ROLE GUEST -->
         <?php if ($user_role !== 'admin'): ?>
             <div class="alert-danger" style="padding: 20px; border-radius:12px; font-size:1rem;">
                 <h4 style="margin: 0 0 8px 0; font-weight:700;">⚠️ Hak Akses Operasional Terbatas</h4>
@@ -167,7 +167,7 @@ $result_pegawai = $conn->query($query_pegawai);
                 <p class="text-muted">Silakan keluar sistem dan gunakan otentikasi akun tingkat tinggi (Administrator Infrastruktur) untuk membuka modul eksekusi berkas digital.</p>
             </div>
 
-        <!-- KONDISI 2: JIKA PESERTA SUKSES MASUK JADI ADMIN -->
+        <!-- KONDISI 2: JIKA ROLE ADMIN -->
         <?php else: ?>
             <div class="welcome-card">
                 <h2>Selamat Datang di Pusat Kendali Utama</h2>
