@@ -38,9 +38,6 @@ $result_pegawai = $conn->query($query_pegawai);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPEG Enterprise - Dashboard</title>
     <style>
-        /* =========================================================================
-           KODE STYLING INTERNAL DASBOR - ANTI ERROR BROWSER / 100% ANTI OFFLINE
-           ========================================================================= */
         body {
             background-color: #f3f4f6;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -185,3 +182,9 @@ $result_pegawai = $conn->query($query_pegawai);
                         <thead>
                             <tr>
                                 <th>Nomor Induk Pegawai (NIP)</th>
+                                <th>Nama Lengkap</th>
+                                <th>Jabatan Struktural</th>
+                                <th>Status Berkas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
