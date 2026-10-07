@@ -1,56 +1,79 @@
 <?php
 session_start();
 
-// Kompatibel untuk PHP versi lama (PHP 5.x / 7.x)
-$logged_in_user = isset($_SESSION['username']) ?$_SESSION['username'] : (isset($_SESSION['admin']) ?$_SESSION['admin'] : null);
-
-if (!$logged_in_user) {
+// Cek session login menggunakan if-else biasa untuk menghindari karakter aneh
+if (isset($_SESSION['username'])) {
+    $logged_in_user = $_SESSION['username'];
+} elseif (isset($_SESSION['admin'])) {
+    $logged_in_user = $_SESSION['admin'];
+} else {
     header("Location: login.php");
     exit;
 }
 
 // Sinkronkan session
-$_SESSION['username'] =$logged_in_user;
-$_SESSION['admin'] =$logged_in_user;
+$_SESSION['username'] = $logged_in_user;
+$_SESSION['admin'] = $logged_in_user;
 
 include 'config.php';
 
 // Ambil data role user dari database
-$stmt_role =$conn->prepare("SELECT role FROM users WHERE username = ?");
+$stmt_role = $conn->prepare("SELECT role FROM users WHERE username = ?");
 $stmt_role->bind_param("s", $logged_in_user);
-$stmt_role->execute();$res_role = $stmt_role->get_result()->fetch_assoc();$stmt_role->close();
+$stmt_role->execute();
+$res_role = $stmt_role->get_result()->fetch_assoc();
+$stmt_role->close();
 
-$real_role = isset($res_role['role']) ?$res_role['role'] : (isset($_SESSION['role']) ?$_SESSION['role'] : 'user');
-$_SESSION['role'] =$real_role;
+if (isset($res_role['role'])) {
+    $real_role = $res_role['role'];
+} elseif (isset($_SESSION['role'])) {
+    $real_role = $_SESSION['role'];
+} else {
+    $real_role = 'user';
+}
+$_SESSION['role'] = $real_role;
 
-$is_admin = (strtolower($real_role) === 'admin' \vert{}\vert{} stripos(strtolower($real_role), 'super') !== false);
+$is_admin = (strtolower($real_role) === 'admin' || stripos($real_role, 'super') !== false);
 
 $message = "";
 $error_msg = "";
 
-if (isset($_POST['submit'])) {$nama = trim($_POST['nama']);$nip = trim($_POST['nip']);$jabatan = trim($_POST['jabatan']);$target_dir = __DIR__ . "/uploads/";
+if (isset($_POST['submit'])) {
+    $nama = trim($_POST['nama']);
+    $nip = trim($_POST['nip']);
+    $jabatan = trim($_POST['jabatan']);
+    
+    $target_dir = dirname(__FILE__) . "/uploads/";
     if (!is_dir($target_dir)) {
         mkdir($target_dir, 0777, true);
     }
     
-    $original_name = basename($_FILES['foto']['name']);$file_name = time() . "_" . preg_replace("/\s+/", "_", $original_name);$target_file = $target_dir .$file_name;
+    $original_name = basename($_FILES['foto']['name']);
+    $file_name = time() . "_" . preg_replace("/\s+/", "_", $original_name);
+    $target_file = $target_dir . $file_name;
     
-    if (move_uploaded_file($_FILES['foto']['tmp_name'],$target_file)) {
-        $stmt =$conn->prepare("INSERT INTO pegawai (nama, nip, jabatan, foto) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $nama,$nip, $jabatan,$file_name);
-        $stmt->execute();$stmt->close();
+    if (move_uploaded_file($_FILES['foto']['tmp_name'], $target_file)) {
+        $stmt = $conn->prepare("INSERT INTO pegawai (nama, nip, jabatan, foto) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $nama, $nip, $jabatan, $file_name);
+        $stmt->execute();
+        $stmt->close();
         
-        $log_stmt =$conn->prepare("INSERT INTO activity_logs (username, activity) VALUES (?, ?)");
+        $log_stmt = $conn->prepare("INSERT INTO activity_logs (username, activity) VALUES (?, ?)");
         $log_act = "Mengunggah dokumen pegawai baru: $nama";
-        $log_stmt->bind_param("ss", $logged_in_user, $log_act);$log_stmt->execute();
-        $log_stmt->close();$message = "Dokumen arsip kepegawaian berhasil disimpan ke server.";
+        $log_stmt->bind_param("ss", $logged_in_user, $log_act);
+        $log_stmt->execute();
+        $log_stmt->close();
+        
+        $message = "Dokumen arsip kepegawaian berhasil disimpan ke server.";
     } else {
         $error_msg = "Gagal memproses penyimpanan berkas ke direktori server.";
     }
 }
 
 // Logika Hapus Data (Khusus Admin)
-if (isset($_GET['hapus']) && $is_admin) {$id = intval($_GET['hapus']);$conn->query("DELETE FROM pegawai WHERE id = $id");
+if (isset($_GET['hapus']) && $is_admin) {
+    $id = intval($_GET['hapus']);
+    $conn->query("DELETE FROM pegawai WHERE id = $id");
     header("Location: index.php");
     exit;
 }
@@ -58,12 +81,12 @@ if (isset($_GET['hapus']) && $is_admin) {$id = intval($_GET['hapus']);$conn->que
 $pegawai_result = null;
 $logs_result = null;
 if ($is_admin) {
-    $pegawai_result =$conn->query("SELECT * FROM pegawai ORDER BY id DESC");
-    $logs_result =$conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 5");
+    $pegawai_result = $conn->query("SELECT * FROM pegawai ORDER BY id DESC");
+    $logs_result = $conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 5");
 }
 
-$total_pegawai_res =$conn->query("SELECT COUNT(*) as total FROM pegawai");
-$total_pegawai = ($total_pegawai_res) ?$total_pegawai_res->fetch_assoc()['total'] : 0;
+$total_pegawai_res = $conn->query("SELECT COUNT(*) as total FROM pegawai");
+$total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -109,4 +132,130 @@ $total_pegawai = ($total_pegawai_res) ?$total_pegawai_res->fetch_assoc()['total'
                 </div>
                 <div>
                     <h6 class="fw-bold mb-1">Pengumuman Internal Korporat</h6>
-                    <p class="mb-0 small text-light opacity-7
+                    <p class="mb-0 small text-light opacity-75">Sistem menggunakan enkripsi berbasis database. Perubahan hak akses tanpa otorisasi akan masuk ke Audit Trail.</p>
+                </div>
+            </div>
+        </div>
+
+        <?php if($message): ?>
+            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
+                <i class="fas fa-check-circle me-2"></i><?= $message; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card p-3 bg-white">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light text-dark p-3 rounded-3 me-3">
+                            <i class="fas fa-users fa-lg"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small d-block fw-medium">Total Pegawai Terdaftar</span>
+                            <h3 class="fw-bold mb-0 text-dark"><?= $total_pegawai; ?> <span class="fs-6 fw-normal text-muted">Orang</span></h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-3 bg-white">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light text-dark p-3 rounded-3 me-3">
+                            <i class="fas fa-user-shield fa-lg"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small d-block fw-medium">Sesi Terverifikasi</span>
+                            <h3 class="fw-bold mb-0 text-dark"><?= htmlspecialchars($logged_in_user); ?> 
+                                <span class="badge badge-soft-primary fs-6 align-middle fw-semibold"><?= htmlspecialchars($real_role); ?></span>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card bg-white">
+                    <div class="card-header bg-transparent py-3">
+                        <span class="fw-bold text-dark"><i class="fas fa-cloud-upload-alt text-primary me-2"></i> Input Data & Dokumen</span>
+                    </div>
+                    <div class="card-body">
+                        <form action="" method="POST" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-secondary">Nama Lengkap & Gelar</label>
+                                <input type="text" name="nama" class="form-control" placeholder="Contoh: Budi Santoso, S.Kom." required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-secondary">NIP / NIK Karyawan</label>
+                                <input type="text" name="nip" class="form-control" placeholder="Contoh: 198001012005011001" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-secondary">Jabatan / Divisi</label>
+                                <input type="text" name="jabatan" class="form-control" placeholder="Senior Infrastructure Analyst" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-secondary">Lampiran Berkas</label>
+                                <input type="file" name="foto" class="form-control" required>
+                            </div>
+                            <button type="submit" name="submit" class="btn btn-primary w-100 shadow-sm">
+                                <i class="fas fa-save me-1"></i> Simpan Data
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card bg-white">
+                    <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-dark"><i class="fas fa-table text-primary me-2"></i> Daftar Karyawan & Arsip File</span>
+                        <span class="badge badge-soft-danger px-2 py-1 fw-medium">Khusus Admin</span>
+                    </div>
+                    <div class="card-body">
+                        <?php if ($is_admin): ?>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Nama</th>
+                                            <th>NIP</th>
+                                            <th>Jabatan</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php $no = 1; while($row = $pegawai_result->fetch_assoc()): ?>
+                                        <tr>
+                                            <td><?= $no++; ?></td>
+                                            <td class="fw-semibold"><?= htmlspecialchars($row['nama']); ?></td>
+                                            <td><?= htmlspecialchars($row['nip']); ?></td>
+                                            <td><?= htmlspecialchars($row['jabatan']); ?></td>
+                                            <td>
+                                                <a href="?hapus=<?= $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus data ini?')"><i class="fas fa-trash-alt"></i></a>
+                                            </td>
+                                        </tr>
+                                        <?php endwhile; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="text-center py-5 text-muted px-4">
+                                <div class="bg-light rounded-circle d-inline-flex p-3 mb-3 text-secondary">
+                                    <i class="fas fa-lock fa-2x"></i>
+                                </div>
+                                <h6 class="fw-bold text-dark">Akses Terbatas Administrator</h6>
+                                <p class="small text-muted mb-0" style="max-width: 400px; margin: 0 auto;">Modul direktori kepegawaian pusat dilindungi oleh sistem otorisasi tingkat lanjut.</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
