@@ -37,10 +37,8 @@ $result_pegawai = $conn->query($query_pegawai);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPEG Enterprise Corp - Dashboard</title>
     
-    <!-- MENGGUNAKAN BOOTSTRAP LOKAL DAN ABSOLUT SUPAYA TIDAK DIBLOKIR BROWSER -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
-    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <style>
         body {
@@ -230,4 +228,3 @@ $result_pegawai = $conn->query($query_pegawai);
                     <div class="card-title-custom text-dark m-0">🌐 Daftar Karyawan & Arsip File</div>
                     <span class="badge bg-danger bg-opacity-10 text-danger rounded-1 py-1 px-2 fw-bold" style="font-size:0.75rem;">Khusus Admin</span>
                 </div>
-
