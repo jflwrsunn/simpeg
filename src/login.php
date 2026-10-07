@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'config.php'; // Menghubungkan ke file konfigurasi database Docker Anda
+include 'config.php';
 
 $error = "";
 
@@ -8,28 +8,17 @@ if (isset($_POST['login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    // =========================================================================
-    // CELAH KEAMANAN REALISTIS (OWASP TOP 10: SQL INJECTION)
-    // Kueri sengaja dibuat rentan menggunakan penggabungan string langsung
-    // tanpa adanya fungsi sanitasi ataupun Prepared Statements.
-    // =========================================================================
+    // CELAH SQL INJECTION KONSISTEN
     $query = "SELECT id, username, password, role FROM users WHERE username = '$username' AND password = '$password'";
-    
-    // Mengeksekusi kueri mentah langsung ke database MariaDB
     $result = $conn->query($query);
 
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
-        
-        // Menyimpan data identitas ke dalam sesi (Session) internal server
         $_SESSION['admin'] = $row['username'];
         $_SESSION['role'] = $row['role']; 
-        
-        // Pengalihan ke halaman administrasi dalam setelah sukses bypass
         header("Location: dashboard.php");
         exit();
     } else {
-        // Pesan eror visual yang akan muncul di layar jika kueri salah/gagal
         $error = "Akun pengguna tidak ditemukan di direktori pusat.";
     }
 }
@@ -40,8 +29,8 @@ if (isset($_POST['login'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPEG Enterprise - Otentikasi Portal</title>
-    <!-- Memanggil Bootstrap 5 Resmi via CDN yang valid -->
-    <link href="https://jsdelivr.net" rel="stylesheet">
+    <!-- MENGGUNAKAN BOOTSTRAP LOKAL AGAR TETAP INDAH DI LAB OFFLINE -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             background-color: #f8f9fa;
@@ -121,6 +110,5 @@ if (isset($_POST['login'])) {
     </div>
 </div>
 
-<script src="https://jsdelivr.net"></script>
 </body>
 </html>
