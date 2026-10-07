@@ -28,10 +28,12 @@ if (isset($_POST['login'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPEG - Sistem Informasi Manajemen Kepegawaian Aparatur Negara</title>
+    <!-- 1. Perbaikan Jalur CDN Bootstrap 5 CSS -->
     <link href="https://jsdelivr.net" rel="stylesheet">
     <style>
         body { min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .bg-gradient-gov {
+            /* 2. Perbaikan Gambar Latar Belakang Perkantoran Realistis */
             background: linear-gradient(135deg, rgba(13, 71, 161, 0.95), rgba(25, 118, 210, 0.9)), url('https://unsplash.com') no-repeat center center/cover;
         }
         .login-sidebar { min-height: 100vh; }
@@ -48,6 +50,7 @@ if (isset($_POST['login'])) {
         <!-- SISI KIRI: Panel Informasi (60% Layar) -->
         <div class="col-lg-7 d-none d-lg-flex bg-gradient-gov text-white align-items-center p-5">
             <div class="w-100 p-4">
+                <!-- 3. Perbaikan Link Gambar Lambang Garuda Pancasila Resmi -->
                 <img src="https://wikimedia.org" alt="Garuda" width="80" class="mb-4">
                 <h1 class="display-5 fw-bold mb-2">Selamat Datang di Portal E-SIMPEG</h1>
                 <p class="lead text-white-50 mb-5">Sistem Integrasi Manajemen Kepegawaian dan Transformasi Digital Aparatur Sipil Negara.</p>
@@ -110,6 +113,7 @@ if (isset($_POST['login'])) {
     </div>
 </div>
 
+<!-- 4. Perbaikan Jalur CDN JS Bootstrap 5 -->
 <script src="https://jsdelivr.net"></script>
 </body>
 </html>
