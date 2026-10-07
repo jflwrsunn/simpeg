@@ -28,6 +28,17 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tambahan Tabel Arsip Rahasia Eksekutif untuk Modul Super Admin
+CREATE TABLE IF NOT EXISTS pegawai_rahasia (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama VARCHAR(100),
+    gaji_sandi VARCHAR(100),
+    keterangan TEXT
+);
+
+INSERT INTO pegawai_rahasia (nama, gaji_sandi, keterangan) VALUES 
+('Direktur Utama Korporat', 'IDR_SECURE_950M_X', 'Akses anggaran rahasia pusat dan audit negara.'),
+('Kepala Divisi Sandi & Siber', 'TOP_SECRET_BSSN_01', 'Pemegang kunci enkripsi infrastruktur utama.');
 -- Seed Data Pengguna (DISINKRONKAN UNTUK SKENARIO ROLE-BASED LAB)
 -- Baris 1 & 2 sengaja dipasang role non-admin sebagai "ranjau" SQL Injection standar.
 INSERT INTO users (username, password, role) VALUES 
