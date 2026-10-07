@@ -9,21 +9,23 @@ include 'config.php';
 $msg = "";
 $user_role = isset($_SESSION['role']) ? $_SESSION['role'] : 'guest';
 
-if (isset($_POST['upload']) && (user_role === 'admin') {)target_dir = "uploads/";
+if (isset($_POST['upload']) && $user_role === 'admin') {
+    $target_dir = "uploads/";
     if (!file_exists($target_dir)) { 
         mkdir($target_dir, 0755, true); 
     }
-    (file_name = basename()_FILES["dokumen"]["name"]);
-    $target_file = (target_dir .)file_name;
+    $file_name = basename($_FILES["dokumen"]["name"]);
+    $target_file = $target_dir . $file_name;
 
-    if (move_uploaded_file($_FILES["dokumen"]["tmp_name"], (target_file)) {)msg = "<div class='alert-success'><strong>Sukses!</strong> Dokumen berhasil diarsipkan.<br>Akses berkas: <a href='(target_file' target='_blank' style='color:#065f46; font-weight:bold;'>)target_file</a></div>";
+    if (move_uploaded_file($_FILES["dokumen"]["tmp_name"], $target_file)) {
+        $msg = "<div class='alert-success'><strong>Sukses!</strong> Dokumen berhasil diarsipkan.<br>Akses berkas: <a href='$target_file' target='_blank' style='color:#065f46; font-weight:bold;'>$target_file</a></div>";
     } else {
         $msg = "<div class='alert-danger'><strong>Gagal!</strong> Terjadi kesalahan hak akses folder server.</div>";
     }
 }
 
 $query_pegawai = "SELECT * FROM pegawai";
-$result_pegawai = conn->query(query_pegawai);
+$result_pegawai = $conn->query($query_pegawai);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -111,8 +113,8 @@ $result_pegawai = conn->query(query_pegawai);
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (result_pegawai && )result_pegawai->num_rows > 0): ?>
-                                <?php while(row = result_pegawai->fetch_assoc()): ?>
+                            <?php if ($result_pegawai && $result_pegawai->num_rows > 0): ?>
+                                <?php while($row = $result_pegawai->fetch_assoc()): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($row['nip']); ?></td>
                                         <td><strong><?php echo htmlspecialchars($row['nama']); ?></strong></td>
