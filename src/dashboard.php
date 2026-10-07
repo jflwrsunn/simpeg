@@ -36,13 +36,18 @@ $result_pegawai = $conn->query($query_pegawai);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPEG Enterprise Corp - Dashboard</title>
-    <link href="https://jsdelivr.net" rel="stylesheet">
-    <link href="https://googleapis.com" rel="stylesheet">
+    
+    <!-- MENGGUNAKAN BOOTSTRAP LOKAL DAN ABSOLUT SUPAYA TIDAK DIBLOKIR BROWSER -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    
     <style>
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #f8fafc;
             color: #1e293b;
+            margin: 0;
+            padding: 0;
         }
         .navbar-custom {
             background-color: #0f172a;
@@ -114,7 +119,7 @@ $result_pegawai = $conn->query($query_pegawai);
         }
         .btn-dark-custom:hover { background-color: #1d4ed8; color: white; }
         .locked-box {
-            text-center: center;
+            text-align: center;
             padding: 60px 20px;
             color: #64748b;
         }
@@ -128,30 +133,30 @@ $result_pegawai = $conn->query($query_pegawai);
 <body>
 
 <!-- Navbar Atas -->
-<nav class="navbar navbar-custom shadow-sm">
+<nav class="navbar navbar-custom shadow-sm navbar-expand">
     <div class="container-fluid d-flex justify-content-between align-items-center">
-        <span class="fw-bold d-flex align-items-center gap-2 m-0 fs-5">
-            <span style="font-size: 1.3rem;">🖨️</span> SIMPEG Enterprise Corp
+        <span class="fw-bold d-flex align-items-center gap-2 m-0 fs-5 text-white">
+            🗂️ SIMPEG Enterprise Corp
         </span>
         <div class="d-flex align-items-center gap-3">
             <span class="small text-white-50">Identitas: <strong class="text-white"><?php echo htmlspecialchars($_SESSION['admin']); ?></strong></span>
-            <?php if ($user_role === 'admin' || $user_role === 'Super Administrator'): ?>
-                <span class="badge bg-danger rounded-pill px-3 py-1.5" style="font-size:0.75rem; font-weight:bold;">Super Administrator</span>
+            <?php if ($user_role === 'admin' || $user_role === 'Super Administrator' || $user_role === 'admin_corporate'): ?>
+                <span class="badge bg-danger rounded-pill px-3 py-1.5" style="font-size:0.75rem; font-weight:bold; color: white;">Super Administrator</span>
             <?php else: ?>
-                <span class="badge bg-secondary rounded-pill px-3 py-1.5" style="font-size:0.75rem; font-weight:bold;">Akses Karyawan</span>
+                <span class="badge bg-secondary rounded-pill px-3 py-1.5" style="font-size:0.75rem; font-weight:bold; color: white;">Akses Karyawan</span>
             <?php endif; ?>
-            <a href="logout.php" class="btn btn-danger btn-sm px-3 fw-bold rounded-3 d-flex align-items-center gap-1">🚪 Keluar</a>
+            <a href="logout.php" class="btn btn-danger btn-sm px-3 fw-bold rounded-3 d-flex align-items-center gap-1 text-white" style="text-decoration: none;"> Keluar</a>
         </div>
     </div>
 </nav>
 
-<div class="main-container">
+<div class="main-container container-fluid">
     
     <!-- Banner Pengumuman Atas -->
     <div class="announcement-banner d-flex align-items-start gap-3 mb-4">
-        <div class="fs-3 bg-white bg-opacity-10 rounded-3 p-2 d-flex align-items-center justify-content-center">📢</div>
+        <div class="fs-4 text-white">📢</div>
         <div>
-            <h6 class="fw-bold m-0 mb-1">Pengumuman Internal Korporat</h6>
+            <h6 class="fw-bold m-0 mb-1 text-white">Pengumuman Internal Korporat</h6>
             <p class="small m-0 text-white-50">Sistem menggunakan enkripsi berbasis database. Perubahan hak akses tanpa otorisasi akan masuk ke Audit Trail.</p>
         </div>
     </div>
@@ -163,7 +168,7 @@ $result_pegawai = $conn->query($query_pegawai);
                 <div class="fs-3 bg-light rounded-3 p-3">👥</div>
                 <div>
                     <small class="text-muted d-block fw-semibold mb-1">Total Pegawai Terdaftar</small>
-                    <h3 class="fw-bold m-0">5 <span class="fs-6 fw-normal text-muted">Orang</span></h3>
+                    <h3 class="fw-bold m-0 text-dark">5 <span class="fs-6 fw-normal text-muted">Orang</span></h3>
                 </div>
             </div>
         </div>
@@ -172,8 +177,8 @@ $result_pegawai = $conn->query($query_pegawai);
                 <div class="fs-3 bg-light rounded-3 p-3">👤</div>
                 <div>
                     <small class="text-muted d-block fw-semibold mb-1">Sesi Terverifikasi</small>
-                    <h4 class="fw-bold m-0"><?php echo htmlspecialchars($_SESSION['admin']); ?> 
-                        <?php if ($user_role === 'admin' || $user_role === 'Super Administrator'): ?>
+                    <h4 class="fw-bold m-0 text-dark"><?php echo htmlspecialchars($_SESSION['admin']); ?> 
+                        <?php if ($user_role === 'admin' || $user_role === 'Super Administrator' || $user_role === 'admin_corporate'): ?>
                             <span class="text-primary fs-6 fw-normal ms-1">Super Administrator</span>
                         <?php else: ?>
                             <span class="text-secondary fs-6 fw-normal ms-1">Akses Terbatas</span>
@@ -187,7 +192,7 @@ $result_pegawai = $conn->query($query_pegawai);
     <!-- Grid Utama: Input Berkas vs Daftar Karyawan -->
     <div class="row g-4">
         
-        <!-- SISI KIRI: Form Input Data & Dokumen (Bisa dipakai oleh user biasa & admin) -->
+        <!-- SISI KIRI: Form Input Data & Dokumen -->
         <div class="col-lg-4">
             <div class="content-card">
                 <div class="card-title-custom text-primary">🔵 Input Data & Dokumen</div>
@@ -195,30 +200,30 @@ $result_pegawai = $conn->query($query_pegawai);
                 <?php echo $msg; ?>
                 
                 <form method="POST" action="" enctype="multipart/form-data" class="d-flex flex-column gap-3">
-                    <div>
+                    <div class="w-100">
                         <label class="form-label-custom">Nama Lengkap & Gelar</label>
                         <input type="text" class="form-control form-control-custom w-100" placeholder="Contoh: Budi Santoso, S.Kom.">
                     </div>
-                    <div>
+                    <div class="w-100">
                         <label class="form-label-custom">NIP / NIK Karyawan</label>
                         <input type="text" class="form-control form-control-custom w-100" placeholder="Contoh: 198001012005011001">
                     </div>
-                    <div>
+                    <div class="w-100">
                         <label class="form-label-custom">Jabatan / Divisi</label>
                         <input type="text" class="form-control form-control-custom w-100" placeholder="Senior Infrastructure Analyst">
                     </div>
-                    <div>
+                    <div class="w-100">
                         <label class="form-label-custom">Lampiran Berkas</label>
                         <input class="form-control form-control-custom w-100" type="file" name="dokumen" required>
                     </div>
-                    <div class="mt-2">
+                    <div class="mt-2 w-100">
                         <button type="submit" name="upload" class="btn-dark-custom">Mulai Unggah Berkas &rarr;</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- SISI KANAN: Daftar Karyawan & Berkas (DIKUNCI JIKA USER BUKAN ADMIN) -->
+        <!-- SISI KANAN: Daftar Karyawan & Berkas -->
         <div class="col-lg-8">
             <div class="content-card position-relative">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -226,4 +231,3 @@ $result_pegawai = $conn->query($query_pegawai);
                     <span class="badge bg-danger bg-opacity-10 text-danger rounded-1 py-1 px-2 fw-bold" style="font-size:0.75rem;">Khusus Admin</span>
                 </div>
 
-                <!-- KONDISI KUNCI ADMIN: Jika user_role BUKAN admin, kunci bagian ini -->
