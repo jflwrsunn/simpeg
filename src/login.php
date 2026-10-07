@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'config.php';
+include 'config.php'; // Terhubung langsung ke file konfigurasi database Docker Anda
 
 $error = "";
 
@@ -8,18 +8,26 @@ if (isset($_POST['login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    // VULNERABILITY: SQL Injection 100% konsisten jebol langsung
+    // =========================================================================
+    // CELAH KEAMANAN UTAMA (SQL INJECTION BYPASS)
+    // Kueri sengaja dibuat menggunakan penggabungan string langsung (concatenation)
+    // tanpa fungsi sanitasi ataupun Prepared Statements.
+    // =========================================================================
     $query = "SELECT id, username, password, role FROM users WHERE username = '$username' AND password = '$password'";
     $result = $conn->query($query);
 
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
+        
+        // Menyimpan data identitas ke dalam sesi (Session) internal
         $_SESSION['admin'] = $row['username'];
         $_SESSION['role'] = $row['role']; 
+        
+        // Alihkan langsung ke halaman dashboard setelah sukses bypass
         header("Location: dashboard.php");
         exit();
     } else {
-        $error = "Kredensial salah atau identitas tidak terdaftar di direktori pusat.";
+        $error = "Akun pengguna tidak ditemukan di direktori pusat.";
     }
 }
 ?>
@@ -28,104 +36,88 @@ if (isset($_POST['login'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Otentikasi Akses - SIMPEG Enterprise</title>
+    <title>SIMPEG Enterprise - Otentikasi Portal</title>
+    <!-- Memanggil Bootstrap 5 Resmi via CDN -->
     <link href="https://jsdelivr.net" rel="stylesheet">
-    <link href="https://googleapis.com" rel="stylesheet">
-    <link rel="stylesheet" href="https://cloudflare.com">
-    
     <style>
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            background-color: #f8f9fa;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        /* Ornamen Lingkaran Estetik di Latar Belakang */
-        body::before {
-            content: ''; position: absolute; width: 300px; height: 300px;
-            background: linear-gradient(#0d47a1, #1565c0);
-            top: 10%; left: 15%; border-radius: 50%; opacity: 0.15; filter: blur(50px);
-        }
-        body::after {
-            content: ''; position: absolute; width: 400px; height: 400px;
-            background: linear-gradient(#7e22ce, #ec4899);
-            bottom: 5%; right: 10%; border-radius: 50%; opacity: 0.12; filter: blur(60px);
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            width: 100%; max-width: 440px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
-        .form-control-custom {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #ffffff !important;
-            padding: 12px 16px;
+        .login-card {
+            border: none;
             border-radius: 12px;
-            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            background: #ffffff;
+            width: 100%;
+            max-width: 450px;
         }
-        .form-control-custom:focus {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        .brand-icon {
+            font-size: 2.5rem;
+            color: #ffffff;
+            background-color: #1e293b;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            margin: 0 auto 20px auto;
         }
-        .form-control-custom::placeholder { color: rgba(255,255,255,0.4); }
-        .btn-modern {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: white; font-weight: 600; padding: 12px;
-            border: none; border-radius: 12px; transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+        .btn-custom {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-weight: 600;
+            border: none;
+            padding: 12px;
+            transition: all 0.2s;
         }
-        .btn-modern:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(29, 78, 216, 0.4);
-            color: white;
+        .btn-custom:hover {
+            background-color: #1e293b;
+            color: #ffffff;
         }
     </style>
 </head>
 <body>
 
-<div class="glass-card">
+<div class="card login-card p-5">
     <div class="text-center mb-4">
-        <div class="text-primary mb-2 fs-2"><i class="fa-solid fa-cube text-info"></i></div>
-        <h4 class="fw-bold text-white m-0 tracking-tight">SIMPEG Enterprise</h4>
-        <p class="small mt-1" style="color: rgba(255,255,255,0.5);">Gerbang Masuk Infrastruktur Korporat</p>
+        <div class="brand-icon">🗂️</div>
+        <h3 class="fw-bold text-dark m-0">SIMPEG Enterprise</h3>
+        <p class="text-muted small mt-1">Sistem Informasi Kepegawaian Korporat</p>
     </div>
 
     <?php if($error): ?>
-        <div class="alert alert-danger py-2 small text-center border-0 text-white" style="background: rgba(239, 68, 68, 0.2);" role="alert">
-            <i class="fa-solid fa-circle-exclamation me-1"></i> <?php echo $error; ?>
+        <div class="alert alert-danger py-2 small text-center" role="alert">
+            <?php echo $error; ?>
         </div>
     <?php endif; ?>
 
     <form method="POST" action="">
         <div class="mb-3">
-            <label class="form-label small fw-semibold" style="color: rgba(255,255,255,0.8);">Nama Pengguna</label>
-            <input type="text" class="form-control form-control-custom" name="username" placeholder="Masukkan ID atau username" required>
+            <label for="username" class="form-label small fw-bold text-secondary">Nama Pengguna</label>
+            <input type="text" class="form-control form-control-lg fs-6" id="username" name="username" placeholder="Masukkan username" required>
         </div>
         
         <div class="mb-4">
-            <label class="form-label small fw-semibold" style="color: rgba(255,255,255,0.8);">Kata Sandi</label>
-            <input type="password" class="form-control form-control-custom" name="password" placeholder="Masukkan password" required>
+            <label for="password" class="form-label small fw-bold text-secondary">Kata Sandi</label>
+            <input type="password" class="form-control form-control-lg fs-6" id="password" name="password" placeholder="Masukkan password" required>
         </div>
         
         <div class="d-grid">
-            <button type="submit" name="login" class="btn btn-modern">Masuk Aplikasi &rarr;</button>
+            <button type="submit" name="login" class="btn btn-custom btn-lg fs-6 shadow-sm">Masuk ke Sistem &rarr;</button>
         </div>
     </form>
 
-    <div class="text-center mt-4 pt-3 text-white-50" style="font-size: 0.7rem; border-top: 1px solid rgba(255,255,255,0.06);">
-        Protected by Enterprise Security Framework.
+    <div class="text-center mt-5 text-muted small" style="font-size: 0.75rem; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+        &copy; 2026 PT Telekomunikasi Media Nusantara. <br> Protected Enterprise Infrastructure.
     </div>
 </div>
 
+<script src="https://jsdelivr.net"></script>
 </body>
 </html>
