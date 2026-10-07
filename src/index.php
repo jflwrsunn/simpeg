@@ -1,15 +1,15 @@
 <?php
 session_start();
 
-// Menyesuaikan dengan session dari login.php (bisa 'username' atau 'admin')
-$logged_in_user = $_SESSION['username'] ?? $_SESSION['admin'] ?? null;
+// Kompatibel untuk PHP versi lama (PHP 5.x / 7.x)
+$logged_in_user = isset($_SESSION['username']) ?$_SESSION['username'] : (isset($_SESSION['admin']) ?$_SESSION['admin'] : null);
 
 if (!$logged_in_user) {
     header("Location: login.php");
     exit;
 }
 
-// Sinkronkan session agar kedua variabel terisi
+// Sinkronkan session
 $_SESSION['username'] =$logged_in_user;
 $_SESSION['admin'] =$logged_in_user;
 
@@ -20,10 +20,9 @@ $stmt_role =$conn->prepare("SELECT role FROM users WHERE username = ?");
 $stmt_role->bind_param("s", $logged_in_user);
 $stmt_role->execute();$res_role = $stmt_role->get_result()->fetch_assoc();$stmt_role->close();
 
-$real_role = $res_role['role'] ?? $_SESSION['role'] ?? 'user';
+$real_role = isset($res_role['role']) ?$res_role['role'] : (isset($_SESSION['role']) ?$_SESSION['role'] : 'user');
 $_SESSION['role'] =$real_role;
 
-// Cek apakah termasuk admin (berdasarkan seed database: 'admin')
 $is_admin = (strtolower($real_role) === 'admin' \vert{}\vert{} stripos(strtolower($real_role), 'super') !== false);
 
 $message = "";
@@ -63,7 +62,8 @@ if ($is_admin) {
     $logs_result =$conn->query("SELECT * FROM activity_logs ORDER BY id DESC LIMIT 5");
 }
 
-$total_pegawai =$conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_assoc()['total'];
+$total_pegawai_res =$conn->query("SELECT COUNT(*) as total FROM pegawai");
+$total_pegawai = ($total_pegawai_res) ?$total_pegawai_res->fetch_assoc()['total'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -91,3 +91,22 @@ $total_pegawai =$conn->query("SELECT COUNT(*) as total FROM pegawai")->fetch_ass
         <div class="container-fluid">
             <a class="navbar-brand fw-bold text-dark d-flex align-items-center" href="index.php">
                 <div class="bg-dark text-white rounded-3 p-2 me-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                    <i class="fas fa-network-wired fa-sm"></i>
+                </div>
+                <span>SIMPEG <span class="text-muted fw-normal fs-6">Enterprise Corp</span></span>
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <a href="logout.php" class="btn btn-sm btn-danger fw-medium px-3"><i class="fas fa-sign-out-alt me-1"></i> Keluar</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4 flex-grow-1">
+        <div class="alert alert-announcement shadow-sm p-4 mb-4 border-0 d-flex align-items-center justify-content-between" role="alert">
+            <div class="d-flex align-items-center">
+                <div class="bg-white bg-opacity-15 p-3 rounded-3 me-3 text-info">
+                    <i class="fas fa-bullhorn fa-lg"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1">Pengumuman Internal Korporat</h6>
+                    <p class="mb-0 small text-light opacity-7
