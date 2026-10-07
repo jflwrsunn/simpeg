@@ -14,9 +14,12 @@ if (isset($_POST['login'])) {
 
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
-        $_SESSION['admin'] = $row['username'];
+        $_SESSION['username'] = $row['username']; // Disamakan dengan index.php
+        $_SESSION['admin'] = $row['username'];    
         $_SESSION['role'] = $row['role']; 
-        header("Location: dashboard.php");
+        
+        // DIUBAH KE index.php (sesuai nama file utama pen-test lab kamu)
+        header("Location: index.php");
         exit();
     } else {
         $error = "Akun pengguna tidak ditemukan di direktori pusat.";
@@ -30,7 +33,6 @@ if (isset($_POST['login'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIMPEG Enterprise - Otentikasi Portal</title>
     <style>
-        /* KODE STYLING INTERNAL RE-DESIGN - ANTI BERANTAKAN / ANTI OFFLINE */
         body {
             background-color: #f8f9fa;
             min-height: 100vh;
@@ -54,7 +56,6 @@ if (isset($_POST['login'])) {
         .text-center { text-align: center; }
         .mb-4 { margin-bottom: 1.5rem; }
         .mb-3 { margin-bottom: 1rem; }
-        .mt-4 { margin-top: 1.5rem; }
         .mt-5 { margin-top: 3rem; }
         .fw-bold { font-weight: 700; }
         .m-0 { margin: 0; }
