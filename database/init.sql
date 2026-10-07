@@ -28,11 +28,12 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Seed Data Pengguna (Username & Password netral korporat)
+-- Seed Data Pengguna (DISINKRONKAN UNTUK SKENARIO ROLE-BASED LAB)
+-- Baris 1 & 2 sengaja dipasang role non-admin sebagai "ranjau" SQL Injection standar.
 INSERT INTO users (username, password, role) VALUES 
-('administrator', 'admin123', 'Super Administrator'),
-('hendra_hr', 'password123', 'HR Staff'),
-('siti_finance', 'password123', 'Finance Operator');
+('hendra_hr', 'password123', 'hr_staff'),
+('siti_finance', 'password123', 'finance_operator'),
+('administrator', 'admin123', 'admin'); -- Menggunakan 'admin' agar sinkron dengan file dashboard.php
 
 -- Seed Data Pegawai Awal
 INSERT INTO pegawai (nama, nip, jabatan, foto) VALUES 
