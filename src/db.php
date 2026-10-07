@@ -1,12 +1,13 @@
 <?php
-$host = "localhost";
+// UBAH DARI "localhost" MENJADI "db" (sesuai nama service di docker-compose)
+$host = "db"; 
 $user = "root"; 
-$pass = ""; // Kosongkan atau sesuaikan dengan password MySQL di VM target
+$pass = ""; // Jika di docker-compose diatur root password, isi di sini
 $db   = "simpeg";
 
 $conn = mysqli_connect($host, $user, $pass, $db);
 
 if (!$conn) {
-    die("Koneksi ke server database gagal: " . mysqli_connect_error());
+    die("Koneksi database gagal: " . mysqli_connect_error());
 }
 ?>
