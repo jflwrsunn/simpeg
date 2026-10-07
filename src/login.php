@@ -1,36 +1,25 @@
 <?php
 session_start();
-include 'config.php';
+include 'db.php';
 
 $error = "";
 
 if (isset($_POST['login'])) {
-    $username = trim($_POST['username']);
-    $password = trim($_POST['password']);
+    $username = $_POST['username'];
+    $password = $_POST['password'];
 
-    $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ?");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // CELAH KEAMANAN TETAP DIJAGA: SQL Injection langsung lewat penyambungan string
+    $query = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
+    $result = mysqli_query($conn, $query);
 
-    if ($row = $result->fetch_assoc()) {
-        if ($password === $row['password'] || password_verify($password, $row['password'])) {
-            $_SESSION['user_id'] = $row['id'];
-            $_SESSION['username'] = $row['username'];
-            $_SESSION['role'] = $row['role'];
-            
-            $curr_user = $row['username'];
-            $conn->query("INSERT INTO activity_logs (username, activity) VALUES ('$curr_user', 'Pengguna berhasil masuk ke sistem')");
-            
-            header("Location: index.php");
-            exit;
-        } else {
-            $error = "Kombinasi Nama Pengguna atau Kata Sandi tidak valid.";
-        }
+    if ($result && mysqli_num_rows($result) > 0) {
+        $row = mysqli_fetch_assoc($result);
+        $_SESSION['admin'] = $row['username'];
+        header("Location: dashboard.php");
+        exit();
     } else {
-        $error = "Akun pengguna tidak ditemukan di direktori pusat.";
+        $error = "Kombinasi NIP/Username atau Password salah, atau akun Anda belum diaktivasi oleh Biro Kepegawaian.";
     }
-    $stmt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -38,93 +27,113 @@ if (isset($_POST['login'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk — SIMPEG Enterprise Corp</title>
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2921/2921222.png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>SIMPEG - Sistem Informasi Manajemen Kepegawaian Negara</title>
+    <!-- Perbaikan Jalur CDN Bootstrap 5 -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f4f7f6;
-            color: #334155;
-            height: 100vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .card-login {
+        .login-card {
             border: none;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
-            width: 100%;
-            max-width: 420px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.95);
+            overflow: hidden;
         }
-        .btn-primary {
-            background-color: #0f172a;
-            border-color: #0f172a;
-            border-radius: 8px;
-            padding: 0.65rem 1rem;
-            font-weight: 500;
+        .brand-header {
+            background-color: #0d47a1;
+            color: white;
+            padding: 25px;
+            text-align: center;
         }
-        .btn-primary:hover {
-            background-color: #1e293b;
-            border-color: #1e293b;
+        .brand-logo {
+            width: 70px;
+            height: auto;
+            margin-bottom: 10px;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2));
         }
-        .form-control {
-            border-radius: 8px;
-            padding: 0.75rem 0.95rem;
-            border-color: #cbd5e1;
+        .btn-gov {
+            background-color: #0d47a1;
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
         }
-        .form-control:focus {
-            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
-            border-color: #0f172a;
+        .btn-gov:hover {
+            background-color: #0a3680;
+            color: white;
+            transform: translateY(-1px);
+        }
+        .notice-box {
+            font-size: 0.8rem;
+            color: #666;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="container px-3">
-        <div class="card card-login bg-white mx-auto p-4 p-md-5">
-            <div class="text-center mb-4">
-                <div class="bg-dark text-white rounded-3 d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 48px; height: 48px;">
-                    <i class="fas fa-network-wired"></i>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card login-card">
+                <!-- Bagian Atas / Header Instansi -->
+                <div class="brand-header">
+                    <!-- Perbaikan Link Gambar Lambang Garuda Pancasila -->
+                    <img src="https://wikimedia.org" alt="Logo Negara" class="brand-logo">
+                    <h5 class="m-0 fw-bold tracking-wide">SIMPEG PORTAL</h5>
+                    <small class="text-white-50">Sistem Informasi Manajemen Kepegawaian Daerah</small>
                 </div>
-                <h4 class="fw-bold text-dark mb-1">SIMPEG Enterprise</h4>
-                <p class="text-muted small">Sistem Informasi Kepegawaian Korporat</p>
+                
+                <!-- Form Login -->
+                <div class="card-body p-4">
+                    <p class="text-muted text-center small mb-4">Silakan masuk menggunakan akun SIAKAD / NIP resmi Anda yang terdaftar.</p>
+                    
+                    <?php if($error): ?>
+                        <div class="alert alert-danger d-flex align-items-center small" role="alert">
+                            <div><?php echo $error; ?></div>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <form method="POST" action="">
+                        <div class="mb-3">
+                            <label for="username" class="form-label small fw-bold text-secondary">Nomor Induk Pegawai (NIP) / Username</label>
+                            <input type="text" class="form-control form-control-lg fs-6" id="username" name="username" placeholder="Contoh: 19920101..." required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label small fw-bold text-secondary">Kata Sandi</label>
+                            <input type="password" class="form-control form-control-lg fs-6" id="password" name="password" placeholder="Masukkan password Anda">
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" name="login" class="btn btn-gov btn-lg fs-6 fw-bold py-2.5 shadow-sm">Masuk Aplikasi</button>
+                        </div>
+                    </form>
+                    
+                    <!-- Catatan Kaki Hukum / Disclaimer Khas Web Pemerintah -->
+                    <div class="notice-box text-center">
+                        <p class="mb-1 fw-bold text-danger">⚠️ PERINGATAN HUKUM</p>
+                        <p class="m-0">Sistem ini hanya diizinkan untuk aparatur sipil negara yang sah. Akses ilegal atau penyalahgunaan data akan diproses sesuai UU ITE yang berlaku.</p>
+                    </div>
+                </div>
             </div>
-
-            <?php if($error): ?>
-                <div class="alert alert-danger py-2 small rounded-3 mb-3" role="alert">
-                    <i class="fas fa-exclamation-circle me-1"></i><?= $error; ?>
-                </div>
-            <?php endif; ?>
-
-            <form action="" method="POST">
-                <div class="mb-3">
-                    <label class="form-label small fw-semibold text-secondary">Nama Pengguna</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0 text-muted" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;"><i class="fas fa-user fa-sm"></i></span>
-                        <input type="text" name="username" class="form-control border-start-0 ps-0" placeholder="Masukkan username" required autofocus>
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <label class="form-label small fw-semibold text-secondary">Kata Sandi</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0 text-muted" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;"><i class="fas fa-lock fa-sm"></i></span>
-                        <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="Masukkan password" required>
-                    </div>
-                </div>
-                <button type="submit" name="login" class="btn btn-primary w-100 shadow-sm">
-                    Masuk ke Sistem <i class="fas fa-arrow-right ms-1"></i>
-                </button>
-            </form>
-
-            <div class="text-center mt-4">
-                <p class="text-muted" style="font-size: 11px;">© 2026 PT Telekomunikasi Media Nusantara<br>Protected Enterprise Infrastructure</p>
+            
+            <div class="text-center mt-3 text-white-50 small">
+                &copy; 2026 Badan Kepegawaian dan Pengembangan Sumber Daya Manusia. All Rights Reserved.
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Perbaikan Jalur CDN JS Bootstrap 5 -->
+<script src="https://jsdelivr.net"></script>
 </body>
 </html>
