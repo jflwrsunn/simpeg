@@ -1,4 +1,4 @@
-# SIMPEG Vulnerable Target (BSSN Training)
+# SIMPEG Vulnerable Target
 
 Aplikasi Web SIMPEG simulasi dengan kerentanan OWASP Top 10 untuk modul pelatihan Penetration Testing.
 
