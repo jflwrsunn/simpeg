@@ -32,6 +32,7 @@ $_SESSION['role'] = $real_role;
 // Cek level admin dan super admin
 $is_admin = (strtolower($real_role) === 'admin' || stripos($real_role, 'super') !== false);
 $is_super_admin = (stripos($real_role, 'super') !== false || strtolower($real_role) === 'superadmin');
+$is_verifikator = (strtolower($real_role) === 'verifikator');
 
 $message = "";
 $error_msg = "";
@@ -101,7 +102,7 @@ if (isset($_GET['hapus']) && $is_admin) {
 $pegawai_result = null;
 $pegawai_rahasia_result = null;
 
-if ($is_admin) {
+if ($is_admin || $is_verifikator) {
     $pegawai_result = $conn->query("SELECT * FROM pegawai ORDER BY id DESC");
 }
 
@@ -249,100 +250,52 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                         <span class="badge badge-soft-danger px-2 py-1 fw-medium">Khusus Admin</span>
                     </div>
                     <div class="card-body">
+                        <?php if ($is_admin || $is_verifikator): ?>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama</th>
+                    <th>NIP</th>
+                    <th>Jabatan</th>
+                    <th>Berkas Upload</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php $no = 1; while($row = $pegawai_result->fetch_assoc()): ?>
+                <tr>
+                    <td><?= $no++; ?></td>
+                    <td class="fw-semibold"><?= htmlspecialchars($row['nama']); ?></td>
+                    <td><?= htmlspecialchars($row['nip']); ?></td>
+                    <td><?= htmlspecialchars($row['jabatan']); ?></td>
+                    <td>
+                        <?php if (!empty($row['foto'])): ?>
+                            <a href="uploads/<?= htmlspecialchars($row['foto']); ?>" target="_blank" class="btn btn-sm btn-outline-primary text-truncate" style="max-width: 130px;" title="<?= htmlspecialchars($row['foto']); ?>">
+                                <i class="fas fa-file-alt me-1"></i> Lihat File
+                            </a>
+                        <?php else: ?>
+                            <span class="text-muted small">Tidak ada</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <!-- [PENYESUAIAN] Verifikator tidak boleh menghapus, hanya admin -->
                         <?php if ($is_admin): ?>
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>No</th>
-                                            <th>Nama</th>
-                                            <th>NIP</th>
-                                            <th>Jabatan</th>
-                                            <th>Berkas Upload</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php $no = 1; while($row = $pegawai_result->fetch_assoc()): ?>
-                                        <tr>
-                                            <td><?= $no++; ?></td>
-                                            <td class="fw-semibold"><?= htmlspecialchars($row['nama']); ?></td>
-                                            <td><?= htmlspecialchars($row['nip']); ?></td>
-                                            <td><?= htmlspecialchars($row['jabatan']); ?></td>
-                                            <td>
-                                                <?php if (!empty($row['foto'])): ?>
-                                                    <a href="uploads/<?= htmlspecialchars($row['foto']); ?>" target="_blank" class="btn btn-sm btn-outline-primary text-truncate" style="max-width: 130px;" title="<?= htmlspecialchars($row['foto']); ?>">
-                                                        <i class="fas fa-file-alt me-1"></i> Lihat File
-                                                    </a>
-                                                <?php else: ?>
-                                                    <span class="text-muted small">Tidak ada</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <a href="?hapus=<?= $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus data ini?')"><i class="fas fa-trash-alt"></i></a>
-                                            </td>
-                                        </tr>
-                                        <?php endwhile; ?>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <a href="?hapus=<?= $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus data ini?')"><i class="fas fa-trash-alt"></i></a>
                         <?php else: ?>
-                            <div class="text-center py-4 text-muted px-4">
-                                <i class="fas fa-lock fa-2x mb-2 text-secondary"></i>
-                                <h6 class="fw-bold text-dark">Akses Terbatas Administrator</h6>
-                                <p class="small text-muted mb-0">Anda memerlukan role admin untuk melihat direktori ini.</p>
-                            </div>
+                            <span class="badge bg-secondary">Read-Only</span>
                         <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Tabel Rahasia: HANYA Super Admin yang Bisa Mengakses -->
-                <div class="card bg-white border border-warning">
-                    <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
-                        <span class="fw-bold text-danger"><i class="fas fa-user-secret me-2"></i> Arsip Data Rahasia Eksekutif (Restricted)</span>
-                        <span class="badge badge-soft-warning px-2 py-1 fw-medium">Super Admin Only</span>
-                    </div>
-                    <div class="card-body">
-                        <?php if ($is_super_admin && $pegawai_rahasia_result): ?>
-                            <div class="table-responsive">
-                                <table class="table table-striped align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Nama Eksekutif</th>
-                                            <th>Kode Sandi / Gaji</th>
-                                            <th>Keterangan Rahasia</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php while($sec_row = $pegawai_rahasia_result->fetch_assoc()): ?>
-                                        <tr>
-                                            <td><?= $sec_row['id']; ?></td>
-                                            <td class="fw-bold text-danger"><?= htmlspecialchars($sec_row['nama']); ?></td>
-                                            <td><code><?= htmlspecialchars($sec_row['gaji_sandi']); ?></code></td>
-                                            <td><?= htmlspecialchars($sec_row['keterangan']); ?></td>
-                                        </tr>
-                                        <?php endwhile; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php else: ?>
-                            <div class="text-center py-4 text-muted px-4">
-                                <div class="bg-light rounded-circle d-inline-flex p-3 mb-2 text-danger">
-                                    <i class="fas fa-shield-alt fa-2x"></i>
-                                </div>
-                                <h6 class="fw-bold text-danger">AKSES DITOLAK (403 Forbidden)</h6>
-                                <p class="small text-muted mb-0" style="max-width: 400px; margin: 0 auto;">
-                                    Data arsip rahasia eksekutif ini dilindungi tingkat enkripsi tertinggi dan hanya terbuka bagi akun dengan hak akses <b>Super Administrator</b>.
-                                </p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php else: ?>
+    <div class="text-center py-4 text-muted px-4">
+        <i class="fas fa-lock fa-2x mb-2 text-secondary"></i>
+        <h6 class="fw-bold text-dark">Akses Terbatas</h6>
+        <p class="small text-muted mb-0">Anda memerlukan hak akses untuk melihat direktori ini.</p>
+    </div>
+<?php endif; ?>

@@ -36,6 +36,15 @@ CREATE TABLE IF NOT EXISTS pegawai_rahasia (
     keterangan TEXT
 );
 
+CREATE TABLE IF NOT EXISTS documents (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  filename VARCHAR(255) NOT NULL,
+  filepath VARCHAR(255) NOT NULL,
+  status VARCHAR(50) DEFAULT 'pending',
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 INSERT INTO pegawai_rahasia (nama, gaji_sandi, keterangan) VALUES 
 ('Direktur Utama Korporat', 'IDR_SECURE_950M_X', 'Akses anggaran rahasia pusat dan audit negara.'),
 ('Kepala Divisi Sandi & Siber', 'TOP_SECRET_BSSN_01', 'Pemegang kunci enkripsi infrastruktur utama.');
@@ -56,3 +65,6 @@ INSERT INTO pegawai (nama, nip, jabatan, foto) VALUES
 INSERT INTO activity_logs (username, activity) VALUES 
 ('administrator', 'Inisialisasi sistem database korporat berhasil.'),
 ('hendra_hr', 'Memperbarui data profil kepegawaian divisi IT.');
+
+INSERT INTO users (username, password, role) VALUES 
+('andi_verifikator', 'verif123', 'verifikator');

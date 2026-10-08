@@ -1,0 +1,4 @@
+[INTERNAL MEMO - PROJECT SIMPEG]
+- Status: Development / Staging Server
+- To-do: Bersihkan file backup database lama sebelum deploy ke production!
+- Catatan Akses Darurat: Akun administrator sementara menggunakan user 'admin' dengan password 'admin123' (pastikan diganti sebelum rilis).
