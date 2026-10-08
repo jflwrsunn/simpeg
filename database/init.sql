@@ -54,6 +54,7 @@ INSERT INTO users (username, password, role) VALUES
 ('hendra_hr', 'password123', 'hr_staff'),
 ('siti_finance', 'password123', 'finance_operator'),
 ('administrator', 'admin123', 'admin'); -- Menggunakan 'admin' agar sinkron dengan file dashboard.php
+('andi_verifikator', 'verif123', 'verifikator');
 
 -- Seed Data Pegawai Awal
 INSERT INTO pegawai (nama, nip, jabatan, foto) VALUES 
@@ -66,5 +67,3 @@ INSERT INTO activity_logs (username, activity) VALUES
 ('administrator', 'Inisialisasi sistem database korporat berhasil.'),
 ('hendra_hr', 'Memperbarui data profil kepegawaian divisi IT.');
 
-INSERT INTO users (username, password, role) VALUES 
-('andi_verifikator', 'verif123', 'verifikator');
