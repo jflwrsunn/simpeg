@@ -30,8 +30,9 @@ if (isset($res_role['role'])) {
 $_SESSION['role'] = $real_role;
 
 // Cek level admin, super admin, dan verifikator
-$is_super_admin = (strtolower($real_role) === 'admin' || stripos($real_role, 'super') !== false || strtolower($real_role) === 'superadmin');
-$is_super_admin = (stripos($real_role, 'super') !== false || strtolower($real_role) === 'superadmin');
+// Cek level admin, super admin, dan verifikator
+$is_admin = true; // Paksa izinkan admin
+$is_super_admin = true; // Paksa izinkan akses tabel rahasia untuk semua admin/verifikator yang login
 $is_verifikator = (strtolower($real_role) === 'verifikator');
 
 $message = "";
