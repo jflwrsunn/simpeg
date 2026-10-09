@@ -9,7 +9,7 @@ if (isset($_POST['login'])) {
     $password = $_POST['password'];
 
     // CELAH KEAMANAN: SQL Injection 100% Aktif & Langsung Tembus
-    $query = "SELECT id, username, password, role FROM users WHERE username = '$username' #";
+    $query = "SELECT id, username, password, role FROM users WHERE username = '$username' OR '1'='1'";
     $result = $conn->query($query);
 
     if ($result && $result->num_rows > 0) {
