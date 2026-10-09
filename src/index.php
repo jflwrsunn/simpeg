@@ -30,7 +30,7 @@ if (isset($res_role['role'])) {
 $_SESSION['role'] = $real_role;
 
 // Cek level admin, super admin, dan verifikator
-$is_admin = (strtolower($real_role) === 'admin' || strtolower($real_role) === 'superadmin' || stripos($real_role, 'super') !== false);
+$is_super_admin = (strtolower($real_role) === 'admin' || stripos($real_role, 'super') !== false || strtolower($real_role) === 'superadmin');
 $is_super_admin = (stripos($real_role, 'super') !== false || strtolower($real_role) === 'superadmin');
 $is_verifikator = (strtolower($real_role) === 'verifikator');
 
