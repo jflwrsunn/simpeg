@@ -29,16 +29,22 @@ if (isset($res_role['role'])) {
 }
 $_SESSION['role'] = $real_role;
 
-// LOGIKA ROLE RBAC (Disesuaikan dengan nilai database: administrator, verifikator)
+// Logika RBAC yang Bersih
 $role_lower = strtolower(trim($real_role));
-
-// Akun "administrator" bertindak sebagai Super Admin dengan hak akses penuh ke seluruh tabel
 $is_admin = ($role_lower === 'administrator' || $role_lower === 'admin' || $role_lower === 'super_admin');
 $is_super_admin = $is_admin; 
-
-// Akun "verifikator" hanya bisa mengakses tabel umum, sedangkan tabel rahasia tertutup (403)
 $is_verifikator = ($role_lower === 'verifikator');
 
+$pegawai_result = null;
+$pegawai_rahasia_result = null;
+
+if ($is_admin || $is_verifikator) {
+    $pegawai_result = $conn->query("SELECT * FROM pegawai ORDER BY id DESC");
+}
+
+if ($is_super_admin) {
+    $pegawai_rahasia_result = $conn->query("SELECT id, nama, gaji_sandi, keterangan FROM pegawai_rahasia ORDER BY id DESC");
+}
 $message = "";
 $error_msg = "";
 
