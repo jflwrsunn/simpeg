@@ -325,7 +325,7 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                                             <td><?= htmlspecialchars($row_r['gaji_sandi']); ?></td>
                                             <td><?= htmlspecialchars($row_r['keterangan'] ?? 'Confidential'); ?></td>
                                         </tr>
-                                        <?php endfor; ?>
+                                        <?php endwhile; ?>
                                     </tbody>
                                 </table>
                             </div>
