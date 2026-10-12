@@ -11,7 +11,7 @@ if (isset($_SESSION['username'])) {
     exit;
 }
 
-include 'db.php'; // Menggunakan koneksi database
+include 'db.php';
 
 // Ambil data role user dari database
 $stmt_role = $conn->prepare("SELECT role FROM users WHERE username = ?");
@@ -23,22 +23,17 @@ $stmt_role->close();
 $real_role = $res_role['role'] ?? $_SESSION['role'] ?? 'user';
 $_SESSION['role'] = $real_role;
 
-// Logika RBAC yang Kebal Typo & Huruf Kapital
+// Logika RBAC (Role Based Access Control)
 $role_lower = strtolower(trim($real_role));
-$is_super_admin = (strpos($role_lower, 'admin') !== false);
-$is_admin = $is_super_admin; 
+$is_admin = (strpos($role_lower, 'admin') !== false);
 $is_verifikator = (strpos($role_lower, 'verif') !== false);
 
-$pegawai_result = null;
+// QUERY DATA: Admin dan Verifikator DIIZINKAN mengambil data tabel pegawai umum
+$pegawai_result = $conn->query("SELECT * FROM pegawai ORDER BY id DESC");
+
+// QUERY DATA RAHASIA: Hanya Admin yang bisa mengambil data ini
 $pegawai_rahasia_result = null;
-
-// Administrator dan Verifikator bisa melihat tabel pegawai umum
-if ($is_admin || $is_verifikator) {
-    $pegawai_result = $conn->query("SELECT * FROM pegawai ORDER BY id DESC");
-}
-
-// Hanya Administrator / Super Admin yang bisa melihat tabel arsip rahasia
-if ($is_super_admin) {
+if ($is_admin) {
     $pegawai_rahasia_result = $conn->query("SELECT id, nama, gaji_sandi, keterangan FROM pegawai_rahasia ORDER BY id DESC");
 }
 
@@ -72,15 +67,6 @@ if (isset($_POST['submit']) && $is_admin) {
                 $stmt->execute();
                 $stmt->close();
             }
-            
-            $log_stmt = $conn->prepare("INSERT INTO activity_logs (username, activity) VALUES (?, ?)");
-            if ($log_stmt) {
-                $log_act = "Mengunggah dokumen pegawai baru: $nama";
-                $log_stmt->bind_param("ss", $logged_in_user, $log_act);
-                $log_stmt->execute();
-                $log_stmt->close();
-            }
-            
             $message = "Dokumen arsip kepegawaian berhasil divalidasi dan disimpan ke server.";
         } else {
             $error_msg = "Gagal memproses penyimpanan berkas ke direktori server.";
@@ -145,18 +131,6 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
     </nav>
 
     <div class="container my-4 flex-grow-1">
-        <div class="alert alert-announcement shadow-sm p-4 mb-4 border-0 d-flex align-items-center justify-content-between" role="alert">
-            <div class="d-flex align-items-center">
-                <div class="bg-white bg-opacity-15 p-3 rounded-3 me-3 text-info">
-                    <i class="fas fa-bullhorn fa-lg"></i>
-                </div>
-                <div>
-                    <h6 class="fw-bold mb-1">Pengumuman Internal Korporat</h6>
-                    <p class="mb-0 small text-light opacity-75">Sistem menggunakan validasi ketat dan tingkat akses berbasis peran (RBAC).</p>
-                </div>
-            </div>
-        </div>
-
         <?php if($message): ?>
             <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
                 <i class="fas fa-check-circle me-2"></i><?= $message; ?>
@@ -171,39 +145,8 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
             </div>
         <?php endif; ?>
 
-        <div class="row g-3 mb-4">
-            <div class="col-md-6">
-                <div class="card p-3 bg-white">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-light text-dark p-3 rounded-3 me-3">
-                            <i class="fas fa-users fa-lg"></i>
-                        </div>
-                        <div>
-                            <span class="text-muted small d-block fw-medium">Total Pegawai Terdaftar</span>
-                            <h3 class="fw-bold mb-0 text-dark"><?= $total_pegawai; ?> <span class="fs-6 fw-normal text-muted">Orang</span></h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card p-3 bg-white">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-light text-dark p-3 rounded-3 me-3">
-                            <i class="fas fa-user-shield fa-lg"></i>
-                        </div>
-                        <div>
-                            <span class="text-muted small d-block fw-medium">Sesi Terverifikasi</span>
-                            <h3 class="fw-bold mb-0 text-dark"><?= htmlspecialchars($logged_in_user); ?> 
-                                <span class="badge badge-soft-primary fs-6 align-middle fw-semibold"><?= htmlspecialchars($real_role); ?></span>
-                            </h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="row g-4">
-            <!-- Form Input hanya muncul jika user adalah admin -->
+            <!-- Form Input: Hanya tampil untuk Admin -->
             <?php if ($is_admin): ?>
             <div class="col-lg-4">
                 <div class="card bg-white">
@@ -213,16 +156,16 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                     <div class="card-body">
                         <form action="" method="POST" enctype="multipart/form-data">
                             <div class="mb-3">
-                                <label class="form-label small fw-semibold text-secondary">Nama Lengkap & Gelar (Harus Huruf)</label>
-                                <input type="text" name="nama" class="form-control" placeholder="Contoh: Budi Santoso" pattern="[a-zA-Z\s\.]+" title="Hanya boleh huruf, spasi, dan titik" required>
+                                <label class="form-label small fw-semibold text-secondary">Nama Lengkap & Gelar</label>
+                                <input type="text" name="nama" class="form-control" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small fw-semibold text-secondary">NIP / NIK Karyawan (Harus Angka)</label>
-                                <input type="text" name="nip" class="form-control" placeholder="Contoh: 19800101200501" pattern="[0-9]+" title="NIP wajib berupa angka murni" required>
+                                <label class="form-label small fw-semibold text-secondary">NIP / NIK Karyawan</label>
+                                <input type="text" name="nip" class="form-control" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small fw-semibold text-secondary">Jabatan / Divisi (Harus Huruf)</label>
-                                <input type="text" name="jabatan" class="form-control" placeholder="Senior Infrastructure" pattern="[a-zA-Z\s\.]+" title="Hanya boleh huruf" required>
+                                <label class="form-label small fw-semibold text-secondary">Jabatan / Divisi</label>
+                                <input type="text" name="jabatan" class="form-control" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold text-secondary">Lampiran Berkas</label>
@@ -239,14 +182,15 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
 
             <!-- Kolom Tabel -->
             <div class="<?= $is_admin ? 'col-lg-8' : 'col-lg-12'; ?>">
-                <!-- Tabel Pegawai Umum -->
+                
+                <!-- Tabel Pegawai Umum (Muncul untuk Admin & Verifikator) -->
                 <div class="card bg-white mb-4">
                     <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
                         <span class="fw-bold text-dark"><i class="fas fa-table text-primary me-2"></i> Daftar Karyawan & Arsip File</span>
-                        <span class="badge badge-soft-danger px-2 py-1 fw-medium"><?= $is_admin ? 'Admin & Verifikator' : 'Verifikator (Read-Only)'; ?></span>
+                        <span class="badge badge-soft-primary px-2 py-1 fw-medium"><?= $is_admin ? 'Full Access' : 'Verifikator (Read-Only File)'; ?></span>
                     </div>
                     <div class="card-body">
-                        <?php if ($pegawai_result): ?>
+                        <?php if ($pegawai_result && $pegawai_result->num_rows > 0): ?>
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead>
@@ -269,11 +213,9 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                                             <td>
                                                 <?php if (!empty($row['foto'])): ?>
                                                     <?php if ($is_admin): ?>
-                                                        <a href="uploads/<?= htmlspecialchars($row['foto']); ?>" target="_blank" class="btn btn-sm btn-outline-primary text-truncate" style="max-width: 130px;" title="<?= htmlspecialchars($row['foto']); ?>">
-                                                            <i class="fas fa-file-alt me-1"></i> Lihat File
-                                                        </a>
+                                                        <a href="uploads/<?= htmlspecialchars($row['foto']); ?>" target="_blank" class="btn btn-sm btn-outline-primary">Lihat File</a>
                                                     <?php else: ?>
-                                                        <span class="badge bg-secondary text-white" title="Akses lihat file dibatasi khusus admin">Terkunci</span>
+                                                        <span class="badge bg-secondary text-white" title="Akses lihat file dibatasi untuk verifikator">Terkunci (Restricted)</span>
                                                     <?php endif; ?>
                                                 <?php else: ?>
                                                     <span class="text-muted small">Tidak ada</span>
@@ -290,16 +232,14 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="text-center py-4 text-muted px-4">
-                                <i class="fas fa-lock fa-2x mb-2 text-secondary"></i>
-                                <h6 class="fw-bold text-dark">Akses Terbatas</h6>
-                                <p class="small text-muted mb-0">Anda memerlukan hak akses untuk melihat direktori ini.</p>
+                            <div class="text-center py-4 text-muted">
+                                <p class="mb-0">Belum ada data pegawai.</p>
                             </div>
                         <?php endif; ?>
                     </div>
                 </div>
 
-                <!-- Tabel Arsip Rahasia Eksekutif -->
+                <!-- Tabel Arsip Rahasia Eksekutif (Hanya untuk Admin) -->
                 <div class="card bg-white">
                     <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
                         <span class="fw-bold text-dark"><i class="fas fa-user-secret text-danger me-2"></i> Arsip Data Rahasia Eksekutif (Restricted)</span>
