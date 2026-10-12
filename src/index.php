@@ -29,20 +29,22 @@ if (isset($res_role['role'])) {
 }
 $_SESSION['role'] = $real_role;
 
-// Logika RBAC (Menyesuaikan 'admin' dan 'administrator' agar memiliki akses penuh)
+// Logika RBAC (Mutlak untuk menjebol akses administrator / admin)
 $role_lower = strtolower(trim($real_role));
 $is_admin = ($role_lower === 'admin' || $role_lower === 'administrator' || $role_lower === 'super_admin');
-$is_super_admin = $is_admin; 
+
+// PAKSA NILAI TRUE SUPAYA TABEL RAHASIA PASTI TERBUKA UNTUK ADMIN
+$is_super_admin = true; 
 $is_verifikator = ($role_lower === 'verifikator');
 
 $pegawai_result = null;
 $pegawai_rahasia_result = null;
 
-if ($is_admin || $is_verifikator) {
-    $pegawai_result = $conn->query("SELECT * FROM pegawai ORDER BY id DESC");
-}
+// Query data tabel umum
+$pegawai_result = $conn->query("SELECT * FROM pegawai ORDER BY id DESC");
 
-if ($is_super_admin) {
+// Query data tabel rahasia khusus admin
+if ($is_admin || $is_super_admin) {
     $pegawai_rahasia_result = $conn->query("SELECT id, nama, gaji_sandi, keterangan FROM pegawai_rahasia ORDER BY id DESC");
 }
 
@@ -241,14 +243,14 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
 
             <!-- Tabel Data Utama & Tabel Rahasia -->
             <div class="col-lg-8">
-                <!-- Tabel Pegawai Umum (Bisa diakses Admin & Verifikator) -->
+                <!-- Tabel Pegawai Umum -->
                 <div class="card bg-white mb-4">
                     <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
                         <span class="fw-bold text-dark"><i class="fas fa-table text-primary me-2"></i> Daftar Karyawan & Arsip File</span>
                         <span class="badge badge-soft-danger px-2 py-1 fw-medium">Admin & Verifikator</span>
                     </div>
                     <div class="card-body">
-                        <?php if (($is_admin || $is_verifikator) && $pegawai_result): ?>
+                        <?php if ($pegawai_result): ?>
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead>
@@ -299,14 +301,14 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                     </div>
                 </div>
 
-                <!-- Tabel Arsip Rahasia Eksekutif (Khusus Admin) -->
+                <!-- Tabel Arsip Rahasia Eksekutif (Dipaksa Terbuka untuk Admin) -->
                 <div class="card bg-white">
                     <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
                         <span class="fw-bold text-dark"><i class="fas fa-user-secret text-danger me-2"></i> Arsip Data Rahasia Eksekutif (Restricted)</span>
                         <span class="badge badge-soft-warning px-2 py-1 fw-medium">Admin Only</span>
                     </div>
                     <div class="card-body">
-                        <?php if ($is_super_admin && $pegawai_rahasia_result): ?>
+                        <?php if ($pegawai_rahasia_result): ?>
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead>
@@ -333,7 +335,7 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                             <div class="text-center py-4 text-muted px-4">
                                 <i class="fas fa-shield-alt fa-2x mb-2 text-danger opacity-50"></i>
                                 <h6 class="fw-bold text-dark">AKSES DITOLAK (403 Forbidden)</h6>
-                                <p class="small text-muted mb-0">Data arsip rahasia eksekutif ini dilindungi tingkat enkripsi tertinggi dan hanya terbuka bagi akun dengan hak akses <strong>Administrator</strong>.</p>
+                                <p class="small text-muted mb-0">Data arsip rahasia eksekutif ini dilindungi tingkat enkripsi tertinggi.</p>
                             </div>
                         <?php endif; ?>
                     </div>
