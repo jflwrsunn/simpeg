@@ -23,11 +23,11 @@ $stmt_role->close();
 $real_role = $res_role['role'] ?? $_SESSION['role'] ?? 'user';
 $_SESSION['role'] = $real_role;
 
-// Logika RBAC (Role Based Access Control)
+// Logika RBAC yang Kebal Typo & Huruf Kapital
 $role_lower = strtolower(trim($real_role));
-$is_super_admin = ($role_lower === 'super_admin' || $role_lower === 'administrator' || $role_lower === 'admin');
-$is_admin = $is_super_admin; // Hak akses kontrol penuh (tambah & hapus)
-$is_verifikator = ($role_lower === 'verifikator');
+$is_super_admin = (strpos($role_lower, 'admin') !== false);
+$is_admin = $is_super_admin; 
+$is_verifikator = (strpos($role_lower, 'verif') !== false);
 
 $pegawai_result = null;
 $pegawai_rahasia_result = null;
