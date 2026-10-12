@@ -31,7 +31,7 @@ $_SESSION['role'] = $real_role;
 
 // Logika RBAC (Mutlak untuk menjebol akses administrator / admin)
 $role_lower = strtolower(trim($real_role));
-$is_admin = ($role_lower === 'admin' || $role_lower === 'administrator' || $role_lower === 'super_admin');
+$is_admin = ($role_lower === 'super_admin' || $role_lower === 'administrator' || $role_lower === 'super_admin');
 
 // PAKSA NILAI TRUE SUPAYA TABEL RAHASIA PASTI TERBUKA UNTUK ADMIN
 $is_super_admin = true; 
