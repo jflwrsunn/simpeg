@@ -29,10 +29,12 @@ if (isset($res_role['role'])) {
 }
 $_SESSION['role'] = $real_role;
 
-// Logika Role RBAC yang Disesuaikan
-$role_lower = strtolower(trim($real_role));
-$is_admin = ($role_lower === 'admin' || $role_lower === 'administrator' || $role_lower === 'super_admin');
-$is_super_admin = $is_admin; // Admin / Administrator dapat mengakses tabel rahasia
+// Logika Role RBAC
+$role_lower = strtolower(trim($real_role ?? ''));
+
+// Siapapun yang role-nya admin / administrator / super_admin langsung diizinkan untuk KEDUA tabel
+$is_admin = ($role_lower === 'admin' || $role_lower === 'administrator' || $role_lower === 'super_admin' || $real_role === 'admin');
+$is_super_admin = $is_admin; 
 $is_verifikator = ($role_lower === 'verifikator');
 
 $message = "";
