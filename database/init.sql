@@ -53,7 +53,7 @@ INSERT INTO pegawai_rahasia (nama, gaji_sandi, keterangan) VALUES
 INSERT INTO users (username, password, role) VALUES 
 ('hendra_hr', 'password123', 'hr_staff'),
 ('siti_finance', 'password123', 'finance_operator'),
-('administrator', 'admin123', 'admin'),
+('administrator', 'admin123', 'super_admin'),
 ('andi_verifikator', 'verif123', 'verifikator');
 
 -- Seed Data Pegawai Awal
