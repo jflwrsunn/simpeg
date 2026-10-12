@@ -11,7 +11,7 @@ if (isset($_SESSION['username'])) {
     exit;
 }
 
-include 'db.php'; // Menggunakan db.php sesuai koneksi yang kamu punya
+include 'db.php'; // Menggunakan koneksi database
 
 // Ambil data role user dari database
 $stmt_role = $conn->prepare("SELECT role FROM users WHERE username = ?");
@@ -29,11 +29,11 @@ if (isset($res_role['role'])) {
 }
 $_SESSION['role'] = $real_role;
 
-// Cek level admin, super admin, dan verifikator
-// Cek level admin, super admin, dan verifikator
-$is_admin = true; // Paksa izinkan admin
-$is_super_admin = true; // Paksa izinkan akses tabel rahasia untuk semua admin/verifikator yang login
-$is_verifikator = (strtolower($real_role) === 'verifikator');
+// Logika Role RBAC yang Disesuaikan
+$role_lower = strtolower(trim($real_role));
+$is_admin = ($role_lower === 'admin' || $role_lower === 'administrator' || $role_lower === 'super_admin');
+$is_super_admin = $is_admin; // Admin / Administrator dapat mengakses tabel rahasia
+$is_verifikator = ($role_lower === 'verifikator');
 
 $message = "";
 $error_msg = "";
@@ -44,7 +44,6 @@ if (isset($_POST['submit'])) {
     $nip = trim($_POST['nip']);
     $jabatan = trim($_POST['jabatan']);
     
-    // Validasi Sisi Server: NIP harus angka, Nama/Jabatan harus huruf/spasi
     if (!ctype_digit($nip)) {
         $error_msg = "Validasi Gagal: Kolom NIP/NIK harus berupa angka murni (0-9).";
     } elseif (!preg_match("/^[a-zA-Z\s\.]+$/", $nama)) {
@@ -106,8 +105,8 @@ if ($is_admin || $is_verifikator) {
 }
 
 if ($is_super_admin) {
-    // Pastikan tabel pegawai_rahasia sudah ada di database jika ingin digunakan
-    $pegawai_rahasia_result = $conn->query("SELECT * FROM pegawai_rahasia ORDER BY id DESC");
+    // Sesuai dengan kolom asli pada tabel pegawai_rahasia: nama, gaji_sandi, keterangan
+    $pegawai_rahasia_result = $conn->query("SELECT id, nama, gaji_sandi, keterangan FROM pegawai_rahasia ORDER BY id DESC");
 }
 
 $total_pegawai_res = $conn->query("SELECT COUNT(*) as total FROM pegawai");
@@ -280,7 +279,7 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                                                 <?php endif; ?>
                                             </td>
                                             <td>
-                                                <?php if ($is_admin && !$is_verifikator): ?>
+                                                <?php if ($is_admin): ?>
                                                     <a href="?hapus=<?= $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus data ini?')"><i class="fas fa-trash-alt"></i></a>
                                                 <?php else: ?>
                                                     <span class="badge bg-secondary">Read-Only</span>
@@ -301,7 +300,7 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                     </div>
                 </div>
 
-                <!-- Tabel Arsip Rahasia Eksekutif (Khusus Super Admin) -->
+                <!-- Tabel Arsip Rahasia Eksekutif (Khusus Admin - Verifikator kena 403) -->
                 <div class="card bg-white">
                     <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
                         <span class="fw-bold text-dark"><i class="fas fa-user-secret text-danger me-2"></i> Arsip Data Rahasia Eksekutif (Restricted)</span>
@@ -315,7 +314,7 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                                         <tr>
                                             <th>No</th>
                                             <th>Nama Rahasia</th>
-                                            <th>NIP</th>
+                                            <th>Gaji & Sandi</th>
                                             <th>Keterangan Khusus</th>
                                         </tr>
                                     </thead>
@@ -324,8 +323,8 @@ $total_pegawai = ($total_pegawai_res) ? $total_pegawai_res->fetch_assoc()['total
                                         <tr>
                                             <td><?= $no_r++; ?></td>
                                             <td class="fw-semibold text-danger"><?= htmlspecialchars($row_r['nama']); ?></td>
-                                            <td><?= htmlspecialchars($row_r['nip']); ?></td>
-                                            <td><?= htmlspecialchars($row_r['jabatan'] ?? 'Confidential'); ?></td>
+                                            <td><?= htmlspecialchars($row_r['gaji_sandi']); ?></td>
+                                            <td><?= htmlspecialchars($row_r['keterangan'] ?? 'Confidential'); ?></td>
                                         </tr>
                                         <?php endwhile; ?>
                                     </tbody>
